@@ -6,6 +6,8 @@ import { ProjectChart } from "@/components/dashboard/project-chart";
 import { WeeklyChart } from "@/components/dashboard/weekly-chart";
 import { RecentLogs } from "@/components/dashboard/recent-logs";
 import { QuickMemoInput } from "@/components/memo/quick-memo-input";
+import { TodayTasks } from "@/components/dashboard/today-tasks";
+import { UpcomingDeadlines } from "@/components/dashboard/upcoming-deadlines";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,9 @@ export default async function DashboardPage() {
   const logs = await getAllWorkLogs();
   const stats = computeStats(logs);
   const recentLogs = logs.slice(0, 5);
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  const todayLogs = logs.filter((log) => log.date === todayStr);
 
   const today = new Date().toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -28,6 +33,8 @@ export default async function DashboardPage() {
         <p className="text-sm text-muted-foreground">{today}</p>
       </div>
       <QuickMemoInput />
+      <TodayTasks logs={todayLogs} />
+      <UpcomingDeadlines logs={logs} />
       <SummaryCards stats={stats} />
       <div className="grid gap-4 md:grid-cols-2">
         <ProjectChart stats={stats} />

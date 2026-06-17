@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,13 +12,14 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, SlidersHorizontal, ChevronDown, ChevronUp } from "lucide-react";
 import { PROJECTS, STATUSES, TAGS, TAG_COLORS } from "@/lib/constants";
 import type { Tag } from "@/lib/types";
 
 export function LogFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [open, setOpen] = useState(false);
 
   const updateParam = useCallback(
     (key: string, value: string | null) => {
@@ -57,86 +58,123 @@ export function LogFilters() {
     searchParams.has("tags") ||
     searchParams.has("search");
 
+  const filterCount = [
+    searchParams.has("dateFrom"),
+    searchParams.has("dateTo"),
+    searchParams.has("project"),
+    searchParams.has("status"),
+    searchParams.has("tags"),
+    searchParams.has("search"),
+  ].filter(Boolean).length;
+
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <Input
-          type="date"
-          className="w-[160px]"
-          value={searchParams.get("dateFrom") || ""}
-          onChange={(e) => updateParam("dateFrom", e.target.value || null)}
-        />
-        <span className="text-sm text-muted-foreground">~</span>
-        <Input
-          type="date"
-          className="w-[160px]"
-          value={searchParams.get("dateTo") || ""}
-          onChange={(e) => updateParam("dateTo", e.target.value || null)}
-        />
-
-        <Select
-          value={searchParams.get("project") || "all"}
-          onValueChange={(v) => updateParam("project", v === "all" ? null : v)}
+      {/* 모바일: 필터 토글 버튼 */}
+      <div className="flex items-center gap-2 md:hidden">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-10"
+          onClick={() => setOpen(!open)}
         >
-          <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder="프로젝트" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">전체 프로젝트</SelectItem>
-            {PROJECTS.map((p) => (
-              <SelectItem key={p} value={p}>
-                {p}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={searchParams.get("status") || "all"}
-          onValueChange={(v) => updateParam("status", v === "all" ? null : v)}
-        >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="상태" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">전체 상태</SelectItem>
-            {STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Input
-          type="text"
-          placeholder="검색..."
-          className="w-[180px]"
-          value={searchParams.get("search") || ""}
-          onChange={(e) => updateParam("search", e.target.value || null)}
-        />
-
+          <SlidersHorizontal className="mr-1.5 h-4 w-4" />
+          필터
+          {filterCount > 0 && (
+            <Badge variant="secondary" className="ml-1.5 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center">
+              {filterCount}
+            </Badge>
+          )}
+          {open ? <ChevronUp className="ml-1 h-3 w-3" /> : <ChevronDown className="ml-1 h-3 w-3" />}
+        </Button>
         {hasFilters && (
-          <Button variant="ghost" size="sm" onClick={clearAll}>
+          <Button variant="ghost" size="sm" className="h-10" onClick={clearAll}>
             <X className="mr-1 h-3 w-3" />
             초기화
           </Button>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {TAGS.map((tag) => (
-          <Badge
-            key={tag}
-            variant="outline"
-            className={`cursor-pointer select-none ${
-              currentTags.includes(tag) ? TAG_COLORS[tag] : ""
-            }`}
-            onClick={() => toggleTag(tag)}
+      {/* 필터 본체: 데스크톱 항상 표시, 모바일은 토글 */}
+      <div className={`space-y-3 ${open ? "block" : "hidden"} md:block`}>
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            type="date"
+            className="w-full sm:w-[160px] h-10"
+            value={searchParams.get("dateFrom") || ""}
+            onChange={(e) => updateParam("dateFrom", e.target.value || null)}
+          />
+          <span className="text-sm text-muted-foreground hidden sm:inline">~</span>
+          <Input
+            type="date"
+            className="w-full sm:w-[160px] h-10"
+            value={searchParams.get("dateTo") || ""}
+            onChange={(e) => updateParam("dateTo", e.target.value || null)}
+          />
+
+          <Select
+            value={searchParams.get("project") || "all"}
+            onValueChange={(v) => updateParam("project", v === "all" ? null : v)}
           >
-            {tag}
-          </Badge>
-        ))}
+            <SelectTrigger className="w-full sm:w-[130px] h-10">
+              <SelectValue placeholder="프로젝트" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체 프로젝트</SelectItem>
+              {PROJECTS.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={searchParams.get("status") || "all"}
+            onValueChange={(v) => updateParam("status", v === "all" ? null : v)}
+          >
+            <SelectTrigger className="w-full sm:w-[120px] h-10">
+              <SelectValue placeholder="상태" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체 상태</SelectItem>
+              {STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Input
+            type="text"
+            placeholder="검색..."
+            className="w-full sm:w-[180px] h-10"
+            value={searchParams.get("search") || ""}
+            onChange={(e) => updateParam("search", e.target.value || null)}
+          />
+
+          {hasFilters && (
+            <Button variant="ghost" size="sm" onClick={clearAll} className="hidden md:flex">
+              <X className="mr-1 h-3 w-3" />
+              초기화
+            </Button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {TAGS.map((tag) => (
+            <Badge
+              key={tag}
+              variant="outline"
+              className={`cursor-pointer select-none h-8 text-sm ${
+                currentTags.includes(tag) ? TAG_COLORS[tag] : ""
+              }`}
+              onClick={() => toggleTag(tag)}
+            >
+              {tag}
+            </Badge>
+          ))}
+        </div>
       </div>
     </div>
   );

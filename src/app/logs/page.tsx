@@ -3,10 +3,11 @@ import Link from "next/link";
 import { queryWorkLogs } from "@/lib/notion-service";
 import { LogTable } from "@/components/logs/log-table";
 import { LogFilters } from "@/components/logs/log-filters";
+import { CsvDownload } from "@/components/logs/csv-download";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
-import type { WorkLogFilters } from "@/lib/types";
+import type { WorkLogFilters, WorkLog } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,12 @@ async function LogList({ searchParams }: { searchParams: Record<string, string> 
     Object.keys(filters).length > 0 ? filters : undefined
   );
 
-  return <LogTable logs={logs} />;
+  return (
+    <>
+      <CsvDownload logs={logs} />
+      <LogTable logs={logs} />
+    </>
+  );
 }
 
 export default async function LogsPage({
@@ -38,7 +44,7 @@ export default async function LogsPage({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">업무 목록</h1>
         <Link href="/logs/new">
-          <Button>
+          <Button className="h-10">
             <Plus className="mr-1 h-4 w-4" />
             업무 추가
           </Button>

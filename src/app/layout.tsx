@@ -13,6 +13,11 @@ const notoSansKR = Noto_Sans_KR({
 export const metadata: Metadata = {
   title: "업무일지 대시보드",
   description: "노션 기반 업무일지 관리 시스템",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "업무일지",
+  },
 };
 
 export default function RootLayout({
