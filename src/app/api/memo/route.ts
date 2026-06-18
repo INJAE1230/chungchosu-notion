@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().split("T")[0];
     const entries = await parseMemoText(text.trim(), today);
 
     return NextResponse.json({ entries, originalText: text.trim() });

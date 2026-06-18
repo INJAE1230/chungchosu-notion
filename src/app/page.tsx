@@ -24,7 +24,7 @@ export default async function DashboardPage() {
   const stats = computeStats(logs);
   const recentLogs = logs.slice(0, 5);
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().split("T")[0];
   const todayLogs = logs.filter((log) => log.date === todayStr);
 
   const today = new Date().toLocaleDateString("ko-KR", {

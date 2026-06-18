@@ -20,7 +20,7 @@ import type { OcrResult } from "@/components/file-upload";
 import type { WorkLog, WorkLogFormData, Tag, AchievementRating } from "@/lib/types";
 
 function getToday() {
-  return new Date().toISOString().split("T")[0];
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().split("T")[0];
 }
 
 export function LogForm({ log }: { log?: WorkLog }) {
