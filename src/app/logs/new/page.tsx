@@ -6,7 +6,7 @@ export default function NewLogPage() {
     <div className="mx-auto max-w-2xl">
       <Card>
         <CardHeader>
-          <CardTitle>업무 추가</CardTitle>
+          <CardTitle className="text-lg">업무 추가</CardTitle>
         </CardHeader>
         <CardContent>
           <LogForm />

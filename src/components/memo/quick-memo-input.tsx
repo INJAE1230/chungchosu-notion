@@ -107,15 +107,13 @@ export function QuickMemoInput() {
   }
 
   return (
-    <Card className="border-dashed border-2 border-indigo-200 dark:border-indigo-800 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20">
+    <Card className="border-dashed">
       <CardContent className="pt-4 pb-3">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="h-4 w-4 text-indigo-500" />
-          <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
-            빠른 메모
-          </span>
+          <Sparkles className="h-3.5 w-3.5 text-primary" />
+          <span className="text-sm font-medium">빠른 메모</span>
           <span className="text-xs text-muted-foreground">
-            — 자유롭게 적으면 AI가 알아서 정리합니다
+            자유롭게 적으면 AI가 정리합니다
           </span>
         </div>
         <div className="flex gap-2">
@@ -136,7 +134,7 @@ export function QuickMemoInput() {
             <Button
               onClick={handleParse}
               disabled={loading || (!text.trim() && files.length === 0)}
-              className="shrink-0 bg-indigo-600 hover:bg-indigo-700"
+              className="shrink-0"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -202,7 +200,7 @@ export function QuickMemoInput() {
           <p className="mt-2 text-sm text-red-500">{error}</p>
         )}
         <p className="mt-2 text-xs text-muted-foreground">
-          Ctrl+Enter로 빠르게 전송 · 📎 파일 첨부 가능
+          Ctrl+Enter로 전송 · 파일 첨부 가능
         </p>
       </CardContent>
     </Card>

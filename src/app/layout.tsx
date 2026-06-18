@@ -11,7 +11,7 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "업무일지 대시보드",
+  title: "업무일지",
   description: "노션 기반 업무일지 관리 시스템",
   appleWebApp: {
     capable: true,
@@ -27,14 +27,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className={`${notoSansKR.className} antialiased`}>
+      <body className={`${notoSansKR.className}`}>
         <ThemeProvider>
           <div className="flex min-h-screen">
             <DesktopSidebar />
             <div className="flex flex-1 flex-col">
               <MobileHeader />
-              <main className="flex-1 px-4 py-6 md:px-8">
-                <div className="mx-auto max-w-6xl animate-fade-in-up">
+              <main className="flex-1 px-4 py-8 md:px-10">
+                <div className="mx-auto max-w-5xl animate-fade-in-up">
                   {children}
                 </div>
               </main>

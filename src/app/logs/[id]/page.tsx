@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getWorkLog } from "@/lib/notion-service";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -26,32 +26,29 @@ export default async function LogDetailPage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
         <Link href="/logs">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-1 h-4 w-4" />
+          <Button variant="ghost" size="sm" className="text-muted-foreground">
+            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
             목록
+          </Button>
+        </Link>
+        <Link href={`/logs/${id}/edit`}>
+          <Button variant="outline" size="sm">
+            <Pencil className="mr-1 h-3.5 w-3.5" />
+            수정
           </Button>
         </Link>
       </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-xl">{log.title}</CardTitle>
-              <p className="text-sm text-muted-foreground">{log.date}</p>
-            </div>
-            <Link href={`/logs/${id}/edit`}>
-              <Button variant="outline" size="sm">
-                <Pencil className="mr-1 h-4 w-4" />
-                수정
-              </Button>
-            </Link>
+        <CardContent className="pt-6 space-y-5">
+          <div>
+            <h1 className="text-lg font-semibold">{log.title}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{log.date}</p>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
+
+          <div className="flex flex-wrap gap-1.5">
             <Badge variant="secondary" className={PROJECT_COLORS[log.project]}>
               {log.project}
             </Badge>
@@ -59,11 +56,7 @@ export default async function LogDetailPage({
               {log.status}
             </Badge>
             {log.tags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className={TAG_COLORS[tag]}
-              >
+              <Badge key={tag} variant="secondary" className={TAG_COLORS[tag]}>
                 {tag}
               </Badge>
             ))}
@@ -72,17 +65,17 @@ export default async function LogDetailPage({
           <Separator />
 
           <div className="space-y-1">
-            <h3 className="text-sm font-medium text-muted-foreground">
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               업무내용
             </h3>
-            <p className="whitespace-pre-wrap text-sm">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed">
               {log.content || "-"}
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1">
-              <h3 className="text-sm font-medium text-muted-foreground">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 소요시간
               </h3>
               <p className="text-sm">
@@ -90,7 +83,7 @@ export default async function LogDetailPage({
               </p>
             </div>
             <div className="space-y-1">
-              <h3 className="text-sm font-medium text-muted-foreground">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 관련 링크
               </h3>
               {log.link ? (
@@ -98,7 +91,7 @@ export default async function LogDetailPage({
                   href={log.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                 >
                   링크 열기
                   <ExternalLink className="h-3 w-3" />
@@ -113,17 +106,17 @@ export default async function LogDetailPage({
             <>
               <Separator />
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   첨부파일 ({log.attachments.length})
                 </h3>
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   {log.attachments.map((file, idx) => (
                     <a
                       key={idx}
                       href={file.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent/50 transition-colors"
                     >
                       {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                         <Image className="h-4 w-4 text-blue-500" />
@@ -142,8 +135,8 @@ export default async function LogDetailPage({
           {(log.outcome || log.rating) && (
             <>
               <Separator />
-              <div className="space-y-3 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-4">
-                <h3 className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+              <div className="space-y-3 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/10 p-4">
+                <h3 className="text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                   성과 기록
                 </h3>
                 {log.outcome && (

@@ -92,7 +92,6 @@ export function MemoPreview({
               size="sm"
               onClick={handleSave}
               disabled={saving}
-              className="bg-indigo-600 hover:bg-indigo-700"
             >
               {saving ? (
                 <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />

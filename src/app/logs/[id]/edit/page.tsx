@@ -23,7 +23,7 @@ export default async function EditLogPage({
     <div className="mx-auto max-w-2xl">
       <Card>
         <CardHeader>
-          <CardTitle>업무 수정</CardTitle>
+          <CardTitle className="text-lg">업무 수정</CardTitle>
         </CardHeader>
         <CardContent>
           <LogForm log={log} />

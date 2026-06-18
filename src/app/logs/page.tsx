@@ -40,12 +40,12 @@ export default async function LogsPage({
   const params = await searchParams;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">업무 목록</h1>
+        <h1 className="text-xl font-semibold">업무 목록</h1>
         <Link href="/logs/new">
-          <Button className="h-10">
-            <Plus className="mr-1 h-4 w-4" />
+          <Button size="sm">
+            <Plus className="mr-1 h-3.5 w-3.5" />
             업무 추가
           </Button>
         </Link>
@@ -57,9 +57,9 @@ export default async function LogsPage({
 
       <Suspense
         fallback={
-          <div className="space-y-3">
+          <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton key={i} className="h-11 w-full rounded-lg" />
             ))}
           </div>
         }
