@@ -21,7 +21,21 @@ export default async function TemplatesPage() {
     );
   }
 
-  const templates = await getAllTemplates();
+  let templates;
+  try {
+    templates = await getAllTemplates();
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return (
+      <div className="space-y-4">
+        <h1 className="text-xl font-semibold tracking-tight">반복 템플릿</h1>
+        <div className="rounded-lg border border-destructive p-8 text-center text-sm text-muted-foreground">
+          <p>템플릿 데이터를 불러오는 중 오류가 발생했습니다.</p>
+          <p className="mt-2 text-xs text-destructive">{msg}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
