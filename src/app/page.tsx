@@ -12,7 +12,7 @@ import { UpcomingDeadlines } from "@/components/dashboard/upcoming-deadlines";
 export const dynamic = "force-dynamic";
 
 function getGreeting() {
-  const hour = new Date().getHours();
+  const hour = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).getHours();
   if (hour < 6) return "늦은 밤이에요";
   if (hour < 12) return "좋은 아침이에요";
   if (hour < 18) return "좋은 오후에요";
