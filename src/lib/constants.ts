@@ -1,4 +1,4 @@
-import type { Project, Status, Tag, AchievementRating, InputSource } from "./types";
+import type { Frequency, Project, Status, Tag, AchievementRating, InputSource } from "./types";
 
 export const PROJECTS: Project[] = ["업무", "개인일정"];
 export const STATUSES: Status[] = ["예정", "진행 중", "완료"];
@@ -23,4 +23,16 @@ export const TAG_COLORS: Record<Tag, string> = {
   "기획": "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
   "리뷰": "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300",
   "버그": "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+};
+
+export const FREQUENCIES: Frequency[] = ["매주", "매월"];
+
+export const DAY_OF_WEEK_LABELS: Record<number, string> = {
+  0: "일요일",
+  1: "월요일",
+  2: "화요일",
+  3: "수요일",
+  4: "목요일",
+  5: "금요일",
+  6: "토요일",
 };

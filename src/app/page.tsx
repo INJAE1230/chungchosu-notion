@@ -8,6 +8,8 @@ import { RecentLogs } from "@/components/dashboard/recent-logs";
 import { QuickMemoInput } from "@/components/memo/quick-memo-input";
 import { TodayTasks } from "@/components/dashboard/today-tasks";
 import { UpcomingDeadlines } from "@/components/dashboard/upcoming-deadlines";
+import { TemplateQuickActions } from "@/components/dashboard/template-quick-actions";
+import { templateDatabaseId } from "@/lib/notion";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +51,9 @@ export default async function DashboardPage() {
 
       {/* 빠른메모 */}
       <QuickMemoInput />
+
+      {/* 반복 업무 */}
+      {templateDatabaseId && <TemplateQuickActions />}
 
       {/* 오늘의 업무 + 마감 임박 */}
       <div className="grid gap-6 lg:grid-cols-2">

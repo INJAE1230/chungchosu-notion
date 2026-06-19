@@ -13,4 +13,6 @@ export async function getDataSourceId(): Promise<string> {
   return cachedDataSourceId;
 }
 
-export { notion, databaseId };
+const templateDatabaseId = process.env.NOTION_TEMPLATE_DATABASE_ID;
+
+export { notion, databaseId, templateDatabaseId };

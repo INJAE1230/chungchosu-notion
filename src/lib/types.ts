@@ -1,3 +1,4 @@
+export type Frequency = "매주" | "매월";
 export type Project = "업무" | "개인일정";
 export type Status = "예정" | "진행 중" | "완료";
 export type Tag = "회의" | "개발" | "기획" | "리뷰" | "버그";
@@ -103,4 +104,29 @@ export interface ProductivityPattern {
   dayName: string;
   count: number;
   hours: number;
+}
+
+export interface RecurringTemplate {
+  id: string;
+  name: string;
+  frequency: Frequency;
+  dayValue: number;
+  defaultProject: Project;
+  defaultStatus: Status;
+  defaultTags: Tag[];
+  defaultHours: number | null;
+  content: string;
+  active: boolean;
+}
+
+export interface RecurringTemplateFormData {
+  name: string;
+  frequency: Frequency;
+  dayValue: number;
+  defaultProject: Project;
+  defaultStatus: Status;
+  defaultTags: Tag[];
+  defaultHours: number | null;
+  content: string;
+  active: boolean;
 }
