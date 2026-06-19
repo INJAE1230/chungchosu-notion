@@ -1,4 +1,4 @@
-import { notion, templateDatabaseId } from "./notion";
+import { notion, templateDatabaseId, getTemplateDataSourceId } from "./notion";
 import { createWorkLog } from "./notion-service";
 import type {
   RecurringTemplate,
@@ -48,19 +48,18 @@ function mapPageToTemplate(page: NotionPage): RecurringTemplate {
 }
 
 export async function getAllTemplates(): Promise<RecurringTemplate[]> {
-  const dbId = getTemplateDbId();
+  const dsId = await getTemplateDataSourceId();
   const allResults: NotionPage[] = [];
   let cursor: string | undefined;
 
   do {
     const query: Record<string, unknown> = {
-      database_id: dbId,
+      data_source_id: dsId,
       page_size: 100,
     };
     if (cursor) query.start_cursor = cursor;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await (notion.databases as any).query(query);
+    const response = await (notion.dataSources as Record<string, Function>).query(query);
     const typed = response as {
       results: NotionPage[];
       has_more: boolean;
