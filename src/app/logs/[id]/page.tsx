@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { PROJECT_COLORS, TAG_COLORS } from "@/lib/constants";
 import { StatusQuickChange } from "@/components/logs/status-quick-change";
 import { DeleteLogButton } from "@/components/logs/delete-log-button";
+import { PolishContentButton } from "@/components/logs/polish-content-button";
 import {
   Pencil,
   ArrowLeft,
@@ -112,11 +113,14 @@ export default async function LogDetailPage({
 
           {/* 업무내용 */}
           <div className="space-y-2">
-            <div className="flex items-center gap-1.5">
-              <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                업무내용
-              </h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  업무내용
+                </h3>
+              </div>
+              <PolishContentButton logId={id} hasContent={!!log.content} />
             </div>
             {log.content ? (
               <div className="rounded-lg bg-muted/40 p-3">
