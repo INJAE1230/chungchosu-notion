@@ -14,6 +14,7 @@ import {
   Bookmark,
   ArrowRight,
   Loader2,
+  ClipboardCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_COLORS, PROJECT_COLORS, PRIORITY_COLORS } from "@/lib/constants";
@@ -146,6 +147,17 @@ export function WeeklyReview({ allLogs: initialLogs }: WeeklyReviewProps) {
 
   return (
     <div className="space-y-6">
+      {/* 페이지 헤더 */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <ClipboardCheck className="h-6 w-6 text-indigo-500" />
+          주간 리뷰
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          한 주를 돌아보고 다음 주를 계획하세요
+        </p>
+      </div>
+
       {/* Week Navigation */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -236,7 +248,7 @@ export function WeeklyReview({ allLogs: initialLogs }: WeeklyReviewProps) {
           ) : (
             <div className="divide-y">
               {review.incomplete.filter((l) => !isProcessed(l.id)).map((log) => (
-                <div key={log.id} className="flex items-center gap-3 py-3">
+                <div key={log.id} className="flex flex-col sm:flex-row sm:items-center gap-2 py-3">
                   <div className="flex-1 min-w-0">
                     <TaskItem log={log} />
                   </div>
@@ -272,7 +284,7 @@ export function WeeklyReview({ allLogs: initialLogs }: WeeklyReviewProps) {
           ) : (
             <div className="divide-y">
               {review.waiting.filter((l) => !isProcessed(l.id)).map((log) => (
-                <div key={log.id} className="flex items-center gap-3 py-3">
+                <div key={log.id} className="flex flex-col sm:flex-row sm:items-center gap-2 py-3">
                   <div className="flex-1 min-w-0">
                     <TaskItem log={log} />
                   </div>
@@ -308,7 +320,7 @@ export function WeeklyReview({ allLogs: initialLogs }: WeeklyReviewProps) {
           ) : (
             <div className="divide-y">
               {review.someday.filter((l) => !isProcessed(l.id)).map((log) => (
-                <div key={log.id} className="flex items-center gap-3 py-3">
+                <div key={log.id} className="flex flex-col sm:flex-row sm:items-center gap-2 py-3">
                   <div className="flex-1 min-w-0">
                     <TaskItem log={log} />
                   </div>

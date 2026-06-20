@@ -32,7 +32,8 @@ export default async function DashboardPage() {
   const todayStr = getKSTToday();
   const todayLogs = logs.filter((log) => log.date === todayStr);
 
-  const today = new Date().toLocaleDateString("ko-KR", {
+  const kstNow = getKSTNow();
+  const today = kstNow.toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -72,9 +73,10 @@ export default async function DashboardPage() {
         <ProjectChart stats={stats} />
         <StatusChart stats={stats} />
       </div>
-      <PriorityChart stats={stats} />
-
-      <WeeklyChart stats={stats} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <PriorityChart stats={stats} />
+        <WeeklyChart stats={stats} />
+      </div>
 
       {/* 최근 업무 */}
       <RecentLogs logs={recentLogs} />

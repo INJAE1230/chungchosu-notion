@@ -5,10 +5,11 @@ import type { ReportType } from "@/lib/types";
 
 export async function POST(request: Request) {
   try {
-    const { type, dateFrom, dateTo } = (await request.json()) as {
+    const { type, dateFrom, dateTo, project } = (await request.json()) as {
       type: ReportType;
       dateFrom: string;
       dateTo: string;
+      project?: string;
     };
 
     if (!type || !dateFrom || !dateTo) {
@@ -18,7 +19,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const logs = await queryWorkLogs({ dateFrom, dateTo });
+    const filters: Record<string, unknown> = { dateFrom, dateTo };
+    if (project) filters.project = project;
+    const logs = await queryWorkLogs(filters as Parameters<typeof queryWorkLogs>[0]);
     const report = generateReport(type, logs, dateFrom, dateTo);
 
     return NextResponse.json({

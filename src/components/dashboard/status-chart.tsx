@@ -1,6 +1,7 @@
 "use client";
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { PieChart as PieChartIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DashboardStats } from "@/lib/types";
 
@@ -28,7 +29,7 @@ export function StatusChart({ stats }: { stats: DashboardStats }) {
       <CardContent>
         {data.length === 0 ? (
           <div className="flex h-[220px] flex-col items-center justify-center gap-2 text-muted-foreground">
-            <div className="text-3xl">📊</div>
+            <PieChartIcon className="h-10 w-10 text-muted-foreground/30" />
             <p className="text-sm">데이터가 없습니다</p>
           </div>
         ) : (

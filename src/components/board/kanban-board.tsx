@@ -14,9 +14,16 @@ import {
 } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { STATUSES, STATUS_COLORS, PROJECT_COLORS, PRIORITY_COLORS } from "@/lib/constants";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { STATUSES, STATUS_COLORS, PROJECT_COLORS, PRIORITY_COLORS, PROJECTS } from "@/lib/constants";
 import { KanbanCard } from "./kanban-card";
-import type { WorkLog, Status } from "@/lib/types";
+import type { WorkLog, Status, Project } from "@/lib/types";
 
 interface KanbanBoardProps {
   initialLogs: WorkLog[];
@@ -65,6 +72,11 @@ export function KanbanBoard({ initialLogs }: KanbanBoardProps) {
   const [logs, setLogs] = useState(initialLogs);
   const [activeLog, setActiveLog] = useState<WorkLog | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [filterProject, setFilterProject] = useState<Project | "all">("all");
+
+  const filteredLogs = filterProject === "all"
+    ? logs
+    : logs.filter((l) => l.projects.includes(filterProject));
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -113,11 +125,24 @@ export function KanbanBoard({ initialLogs }: KanbanBoardProps) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">칸반 보드</h1>
-        <p className="text-sm text-muted-foreground">
-          카드를 드래그하여 상태를 변경하세요 · 전체 {logs.length}건
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">칸반 보드</h1>
+          <p className="text-sm text-muted-foreground">
+            카드를 드래그하여 상태를 변경하세요 · {filterProject === "all" ? "전체" : filterProject} {filteredLogs.length}건
+          </p>
+        </div>
+        <Select value={filterProject} onValueChange={(v) => setFilterProject(v as Project | "all")}>
+          <SelectTrigger className="w-[140px] h-9">
+            <SelectValue placeholder="사업장" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">전체 사업장</SelectItem>
+            {PROJECTS.map((p) => (
+              <SelectItem key={p} value={p}>{p}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <DndContext
@@ -130,7 +155,7 @@ export function KanbanBoard({ initialLogs }: KanbanBoardProps) {
             <KanbanColumn
               key={status}
               status={status}
-              logs={logs.filter((l) => l.status === status)}
+              logs={filteredLogs.filter((l) => l.status === status)}
             />
           ))}
         </div>

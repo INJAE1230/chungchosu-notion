@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -20,6 +20,8 @@ export function LogFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState(searchParams.get("search") || "");
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateParam = useCallback(
     (key: string, value: string | null) => {
@@ -46,7 +48,22 @@ export function LogFilters() {
     [currentTags, updateParam]
   );
 
+  const debouncedSearch = useCallback(
+    (value: string) => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = setTimeout(() => {
+        updateParam("search", value || null);
+      }, 300);
+    },
+    [updateParam]
+  );
+
+  useEffect(() => {
+    return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
+  }, []);
+
   const clearAll = useCallback(() => {
+    setSearchValue("");
     router.push("/logs");
   }, [router]);
 
@@ -168,8 +185,11 @@ export function LogFilters() {
             type="text"
             placeholder="검색..."
             className="w-full sm:w-[180px] h-10"
-            value={searchParams.get("search") || ""}
-            onChange={(e) => updateParam("search", e.target.value || null)}
+            value={searchValue}
+            onChange={(e) => {
+              setSearchValue(e.target.value);
+              debouncedSearch(e.target.value);
+            }}
           />
 
           {hasFilters && (

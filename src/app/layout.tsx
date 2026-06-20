@@ -3,6 +3,7 @@ import { Noto_Sans_KR } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DesktopSidebar, MobileHeader } from "@/components/layout/sidebar";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import "./globals.css";
 
 const notoSansKR = Noto_Sans_KR({
@@ -33,11 +34,12 @@ export default function RootLayout({
             <DesktopSidebar />
             <div className="flex flex-1 flex-col">
               <MobileHeader />
-              <main className="flex-1 px-4 py-8 md:px-10">
+              <main className="flex-1 px-4 py-8 pb-20 md:px-10 md:pb-8">
                 <div className="mx-auto max-w-5xl animate-fade-in-up">
                   {children}
                 </div>
               </main>
+              <MobileBottomNav />
             </div>
           </div>
           <Toaster position="top-right" richColors />

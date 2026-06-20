@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/ui/card";
-import { MoreHorizontal, Pencil, Trash2, Play } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { DAY_OF_WEEK_LABELS, TAG_COLORS } from "@/lib/constants";
 import { TemplateFormDialog } from "./template-form-dialog";
@@ -44,6 +44,25 @@ export function TemplateTable({
   const [editTarget, setEditTarget] = useState<RecurringTemplate | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<RecurringTemplate | null>(null);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const handleToggleActive = async (template: RecurringTemplate) => {
+    setTogglingId(template.id);
+    try {
+      const res = await fetch(`/api/templates/${template.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !template.active }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(`"${template.name}" ${template.active ? "비활성" : "활성"}화됨`);
+      router.refresh();
+    } catch {
+      toast.error("상태 변경 실패");
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const handleGenerateSingle = async (template: RecurringTemplate) => {
     setGeneratingId(template.id);
@@ -85,9 +104,17 @@ export function TemplateTable({
                   {tmpl.autoGenerate && (
                     <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">자동</Badge>
                   )}
-                  {!tmpl.active && (
-                    <Badge variant="secondary" className="text-xs">비활성</Badge>
-                  )}
+                  <button
+                    onClick={() => handleToggleActive(tmpl)}
+                    disabled={togglingId === tmpl.id}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${tmpl.active ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"}`}
+                  >
+                    {togglingId === tmpl.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin mx-auto text-white" />
+                    ) : (
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${tmpl.active ? "translate-x-[18px]" : "translate-x-1"}`} />
+                    )}
+                  </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {tmpl.frequency} {formatDay(tmpl)} · {tmpl.defaultProjects.join(", ")}
@@ -179,12 +206,18 @@ export function TemplateTable({
                     {tmpl.defaultHours ? `${tmpl.defaultHours}h` : "-"}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      {tmpl.active ? (
-                        <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">활성</Badge>
-                      ) : (
-                        <Badge variant="secondary">비활성</Badge>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleToggleActive(tmpl)}
+                        disabled={togglingId === tmpl.id}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${tmpl.active ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"}`}
+                      >
+                        {togglingId === tmpl.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin mx-auto text-white" />
+                        ) : (
+                          <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${tmpl.active ? "translate-x-[18px]" : "translate-x-1"}`} />
+                        )}
+                      </button>
                       {tmpl.autoGenerate && (
                         <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">자동</Badge>
                       )}

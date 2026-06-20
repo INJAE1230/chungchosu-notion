@@ -14,7 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import type { ReportType } from "@/lib/types";
+import { PROJECTS } from "@/lib/constants";
+import type { ReportType, Project } from "@/lib/types";
 
 const PRESETS = [
   { label: "오늘", getRange: () => {
@@ -37,6 +38,7 @@ export default function ReportsPage() {
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
   const [report, setReport] = useState<{ title: string; content: string } | null>(null);
+  const [project, setProject] = useState<Project | "all">("all");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -46,7 +48,7 @@ export default function ReportsPage() {
       const res = await fetch("/api/reports/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, dateFrom, dateTo }),
+        body: JSON.stringify({ type, dateFrom, dateTo, project: project === "all" ? undefined : project }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -114,7 +116,7 @@ export default function ReportsPage() {
             ))}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">보고서 유형</label>
               <Select value={type} onValueChange={(v) => setType(v as ReportType)}>
@@ -143,6 +145,20 @@ export default function ReportsPage() {
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">사업장</label>
+              <Select value={project} onValueChange={(v) => setProject(v as Project | "all")}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">전체</SelectItem>
+                  {PROJECTS.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

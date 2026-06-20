@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { STATUS_COLORS, PROJECT_COLORS } from "@/lib/constants";
 import type { WorkLog } from "@/lib/types";
 
@@ -140,10 +140,11 @@ export function CalendarView({ logs }: CalendarViewProps) {
                       <div className="text-[10px] text-muted-foreground px-1">+{dayLogs.length - 3}건</div>
                     )}
                   </div>
-                  {/* 모바일: 점으로 표시 */}
+                  {/* 모바일: 건수 + 점으로 표시 */}
                   {dayLogs.length > 0 && (
-                    <div className="flex gap-0.5 sm:hidden mt-0.5">
-                      {dayLogs.slice(0, 3).map((log) => (
+                    <div className="flex items-center gap-0.5 sm:hidden mt-0.5">
+                      <span className="text-[9px] font-medium text-muted-foreground">{dayLogs.length}</span>
+                      {dayLogs.slice(0, 2).map((log) => (
                         <div
                           key={log.id}
                           className={`h-1.5 w-1.5 rounded-full ${
@@ -155,7 +156,6 @@ export function CalendarView({ logs }: CalendarViewProps) {
                           }`}
                         />
                       ))}
-                      {dayLogs.length > 3 && <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />}
                     </div>
                   )}
                 </div>
@@ -169,9 +169,17 @@ export function CalendarView({ logs }: CalendarViewProps) {
       {selectedDate && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">
-              {selectedDate} 업무 ({selectedLogs.length}건)
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium">
+                {selectedDate} 업무 ({selectedLogs.length}건)
+              </CardTitle>
+              <Link href={`/logs/new?date=${selectedDate}`}>
+                <Button variant="outline" size="sm">
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  업무 추가
+                </Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             {selectedLogs.length === 0 ? (

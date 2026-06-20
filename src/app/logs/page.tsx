@@ -6,7 +6,7 @@ import { LogFilters } from "@/components/logs/log-filters";
 import { CsvDownload } from "@/components/logs/csv-download";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus } from "lucide-react";
+import { Plus, ClipboardList } from "lucide-react";
 import type { WorkLogFilters, WorkLog } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,12 @@ async function LogList({ searchParams }: { searchParams: Record<string, string> 
 
   return (
     <>
-      <CsvDownload logs={logs} />
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {logs.length}건의 업무
+        </p>
+        <CsvDownload logs={logs} />
+      </div>
       <LogTable logs={logs} />
     </>
   );
@@ -43,7 +48,10 @@ export default async function LogsPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">업무 목록</h1>
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <ClipboardList className="h-6 w-6 text-sky-500" />
+          업무 목록
+        </h1>
         <Link href="/logs/new">
           <Button size="sm">
             <Plus className="mr-1 h-3.5 w-3.5" />

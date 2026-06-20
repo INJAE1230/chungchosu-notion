@@ -24,6 +24,12 @@ import { DeleteDialog } from "./delete-dialog";
 import { useState } from "react";
 import type { WorkLog } from "@/lib/types";
 
+const DAY_SHORT = ["일", "월", "화", "수", "목", "금", "토"];
+function formatDateShort(dateStr: string) {
+  const d = new Date(dateStr + "T00:00:00");
+  return `${d.getMonth() + 1}/${d.getDate()}(${DAY_SHORT[d.getDay()]})`;
+}
+
 export function LogTable({ logs }: { logs: WorkLog[] }) {
   const router = useRouter();
   const [deleteTarget, setDeleteTarget] = useState<WorkLog | null>(null);
@@ -45,7 +51,7 @@ export function LogTable({ logs }: { logs: WorkLog[] }) {
             <div className="flex items-start justify-between gap-2">
               <Link href={`/logs/${log.id}`} className="flex-1 min-w-0">
                 <p className="font-medium truncate">{log.title}</p>
-                <p className="text-xs text-muted-foreground mt-1">{log.date}</p>
+                <p className="text-xs text-muted-foreground mt-1">{formatDateShort(log.date)}</p>
               </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -107,7 +113,7 @@ export function LogTable({ logs }: { logs: WorkLog[] }) {
                     {log.title}
                   </Link>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{log.date}</TableCell>
+                <TableCell className="text-muted-foreground">{formatDateShort(log.date)}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {log.projects.map((proj) => (

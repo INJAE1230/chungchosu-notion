@@ -23,13 +23,13 @@ function getToday() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().split("T")[0];
 }
 
-export function LogForm({ log }: { log?: WorkLog }) {
+export function LogForm({ log, initialDate }: { log?: WorkLog; initialDate?: string }) {
   const router = useRouter();
   const isEdit = !!log;
 
   const [form, setForm] = useState<WorkLogFormData>({
     title: log?.title || "",
-    date: log?.date || getToday(),
+    date: log?.date || initialDate || getToday(),
     projects: log?.projects || ["청초수"],
     status: log?.status || "다음행동",
     priority: log?.priority || null,
@@ -42,6 +42,7 @@ export function LogForm({ log }: { log?: WorkLog }) {
     attachments: log?.attachments || [],
   });
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   function handleOcrResult(result: OcrResult) {
     const updates: Partial<WorkLogFormData> = {};
@@ -121,9 +122,32 @@ export function LogForm({ log }: { log?: WorkLog }) {
         <label className="text-sm font-medium">업무 제목 *</label>
         <Input
           value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          onChange={(e) => { setForm({ ...form, title: e.target.value }); setTouched(true); }}
+          onBlur={() => setTouched(true)}
           placeholder="업무 제목을 입력하세요"
+          className={touched && !form.title.trim() ? "border-red-500 focus-visible:ring-red-500" : ""}
         />
+        {touched && !form.title.trim() && (
+          <p className="text-xs text-red-500">업무 제목은 필수입니다</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">사업장 (복수 선택 가능)</label>
+        <div className="flex flex-wrap gap-2">
+          {PROJECTS.map((proj) => (
+            <Badge
+              key={proj}
+              variant="outline"
+              className={`cursor-pointer select-none ${
+                form.projects.includes(proj) ? PROJECT_COLORS[proj] : ""
+              }`}
+              onClick={() => toggleProject(proj)}
+            >
+              {proj}
+            </Badge>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -188,24 +212,6 @@ export function LogForm({ log }: { log?: WorkLog }) {
           placeholder="업무 내용을 입력하세요"
           rows={4}
         />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">사업장 (복수 선택 가능)</label>
-        <div className="flex flex-wrap gap-2">
-          {PROJECTS.map((proj) => (
-            <Badge
-              key={proj}
-              variant="outline"
-              className={`cursor-pointer select-none ${
-                form.projects.includes(proj) ? PROJECT_COLORS[proj] : ""
-              }`}
-              onClick={() => toggleProject(proj)}
-            >
-              {proj}
-            </Badge>
-          ))}
-        </div>
       </div>
 
       <div className="space-y-2">

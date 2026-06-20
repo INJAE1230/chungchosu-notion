@@ -17,6 +17,16 @@ const TAG_CHART_COLORS: Record<string, string> = {
   "기획": "#22c55e",
   "리뷰": "#8b5cf6",
   "버그": "#ef4444",
+  "디자인": "#ec4899",
+  "문서": "#06b6d4",
+  "배포": "#14b8a6",
+  "테스트": "#f97316",
+  "운영": "#6366f1",
+  "교육": "#a855f7",
+  "연구": "#84cc16",
+  "고객": "#e11d48",
+  "인사": "#0ea5e9",
+  "재무": "#d946ef",
 };
 
 export function TagDistributionChart({
