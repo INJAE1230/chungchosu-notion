@@ -44,7 +44,7 @@ export function TemplateGalleryDialog({
       name: preset.name,
       frequency: preset.frequency,
       dayValues: preset.dayValues,
-      defaultProject: preset.defaultProject,
+      defaultProjects: preset.defaultProjects,
       defaultStatus: preset.defaultStatus,
       defaultTags: preset.defaultTags,
       defaultHours: preset.defaultHours,

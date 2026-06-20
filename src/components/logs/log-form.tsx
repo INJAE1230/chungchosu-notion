@@ -14,10 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { PROJECTS, STATUSES, PRIORITIES, TAGS, TAG_COLORS, PRIORITY_COLORS, ACHIEVEMENT_RATINGS } from "@/lib/constants";
+import { PROJECTS, STATUSES, PRIORITIES, TAGS, TAG_COLORS, PRIORITY_COLORS, PROJECT_COLORS, ACHIEVEMENT_RATINGS } from "@/lib/constants";
 import { FileUpload } from "@/components/file-upload";
 import type { OcrResult } from "@/components/file-upload";
-import type { WorkLog, WorkLogFormData, Tag, Priority, AchievementRating } from "@/lib/types";
+import type { WorkLog, WorkLogFormData, Tag, Priority, AchievementRating, Project } from "@/lib/types";
 
 function getToday() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().split("T")[0];
@@ -30,7 +30,7 @@ export function LogForm({ log }: { log?: WorkLog }) {
   const [form, setForm] = useState<WorkLogFormData>({
     title: log?.title || "",
     date: log?.date || getToday(),
-    project: log?.project || "청초수",
+    projects: log?.projects || ["청초수"],
     status: log?.status || "다음행동",
     priority: log?.priority || null,
     content: log?.content || "",
@@ -67,6 +67,15 @@ export function LogForm({ log }: { log?: WorkLog }) {
     }
     setForm((prev) => ({ ...prev, ...updates }));
   }
+
+  const toggleProject = (proj: Project) => {
+    setForm((prev) => ({
+      ...prev,
+      projects: prev.projects.includes(proj)
+        ? prev.projects.filter((p) => p !== proj)
+        : [...prev.projects, proj],
+    }));
+  };
 
   const toggleTag = (tag: Tag) => {
     setForm((prev) => ({
@@ -117,7 +126,7 @@ export function LogForm({ log }: { log?: WorkLog }) {
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
           <label className="text-sm font-medium">날짜</label>
           <Input
@@ -125,27 +134,6 @@ export function LogForm({ log }: { log?: WorkLog }) {
             value={form.date}
             onChange={(e) => setForm({ ...form, date: e.target.value })}
           />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">프로젝트</label>
-          <Select
-            value={form.project}
-            onValueChange={(v) =>
-              setForm({ ...form, project: v as WorkLogFormData["project"] })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PROJECTS.map((p) => (
-                <SelectItem key={p} value={p}>
-                  {p}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="space-y-2">
@@ -200,6 +188,24 @@ export function LogForm({ log }: { log?: WorkLog }) {
           placeholder="업무 내용을 입력하세요"
           rows={4}
         />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">사업장 (복수 선택 가능)</label>
+        <div className="flex flex-wrap gap-2">
+          {PROJECTS.map((proj) => (
+            <Badge
+              key={proj}
+              variant="outline"
+              className={`cursor-pointer select-none ${
+                form.projects.includes(proj) ? PROJECT_COLORS[proj] : ""
+              }`}
+              onClick={() => toggleProject(proj)}
+            >
+              {proj}
+            </Badge>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-2">

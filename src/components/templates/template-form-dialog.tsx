@@ -25,6 +25,7 @@ import {
   STATUSES,
   TAGS,
   TAG_COLORS,
+  PROJECT_COLORS,
   FREQUENCIES,
   DAY_OF_WEEK_LABELS,
 } from "@/lib/constants";
@@ -33,6 +34,7 @@ import type {
   RecurringTemplateFormData,
   Tag,
   Frequency,
+  Project,
 } from "@/lib/types";
 
 export function TemplateFormDialog({
@@ -53,7 +55,7 @@ export function TemplateFormDialog({
     name: template?.name || initialData?.name || "",
     frequency: template?.frequency || initialData?.frequency || "매주",
     dayValues: template?.dayValues || initialData?.dayValues || [1],
-    defaultProject: template?.defaultProject || initialData?.defaultProject || "청초수",
+    defaultProjects: template?.defaultProjects || initialData?.defaultProjects || ["청초수"],
     defaultStatus: template?.defaultStatus || initialData?.defaultStatus || "예정",
     defaultTags: template?.defaultTags || initialData?.defaultTags || [],
     defaultHours: template?.defaultHours ?? initialData?.defaultHours ?? null,
@@ -62,6 +64,15 @@ export function TemplateFormDialog({
     autoGenerate: template?.autoGenerate ?? false,
   });
   const [loading, setLoading] = useState(false);
+
+  const toggleProject = (proj: Project) => {
+    setForm((prev) => ({
+      ...prev,
+      defaultProjects: prev.defaultProjects.includes(proj)
+        ? prev.defaultProjects.filter((p) => p !== proj)
+        : [...prev.defaultProjects, proj],
+    }));
+  };
 
   const toggleTag = (tag: Tag) => {
     setForm((prev) => ({
@@ -200,54 +211,46 @@ export function TemplateFormDialog({
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">프로젝트</label>
-              <Select
-                value={form.defaultProject}
-                onValueChange={(v) =>
-                  setForm({
-                    ...form,
-                    defaultProject: v as RecurringTemplateFormData["defaultProject"],
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROJECTS.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">사업장 (복수 선택 가능)</label>
+            <div className="flex flex-wrap gap-1.5">
+              {PROJECTS.map((proj) => (
+                <Badge
+                  key={proj}
+                  variant="outline"
+                  className={`cursor-pointer select-none ${
+                    form.defaultProjects.includes(proj) ? PROJECT_COLORS[proj] : ""
+                  }`}
+                  onClick={() => toggleProject(proj)}
+                >
+                  {proj}
+                </Badge>
+              ))}
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">기본 상태</label>
-              <Select
-                value={form.defaultStatus}
-                onValueChange={(v) =>
-                  setForm({
-                    ...form,
-                    defaultStatus: v as RecurringTemplateFormData["defaultStatus"],
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">기본 상태</label>
+            <Select
+              value={form.defaultStatus}
+              onValueChange={(v) =>
+                setForm({
+                  ...form,
+                  defaultStatus: v as RecurringTemplateFormData["defaultStatus"],
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

@@ -21,7 +21,7 @@ function groupByStatus(logs: WorkLog[]) {
 
 function formatLogLine(log: WorkLog, idx: number) {
   const parts = [`${idx}. ${log.title}`];
-  if (log.project) parts.push(`[${log.project}]`);
+  if (log.projects.length > 0) parts.push(`[${log.projects.join(", ")}]`);
   if (log.hours) parts.push(`(${log.hours}시간)`);
   let line = parts.join(" ");
   if (log.content) line += `\n   내용: ${log.content}`;
@@ -93,7 +93,9 @@ export function generateReport(
   if (type !== "daily") {
     const projectCounts: Record<string, number> = {};
     logs.forEach((l) => {
-      projectCounts[l.project] = (projectCounts[l.project] || 0) + 1;
+      for (const proj of l.projects) {
+        projectCounts[proj] = (projectCounts[proj] || 0) + 1;
+      }
     });
     sections.push("");
     sections.push("■ 프로젝트별 현황");

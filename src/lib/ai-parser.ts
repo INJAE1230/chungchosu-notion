@@ -7,7 +7,7 @@ const workLogSchema = z.object({
     z.object({
       title: z.string().describe("업무 제목 (간결하게)"),
       date: z.string().describe("날짜 (YYYY-MM-DD 형식)"),
-      project: z.enum(["청초수", "씨푸드", "JS코퍼", "JKK", "646코퍼", "아일랜드", "청초수(신관)", "에이전트", "에그롤린대전", "개인일정"]).describe("프로젝트/사업장 분류"),
+      projects: z.array(z.enum(["청초수", "씨푸드", "JS코퍼", "JKK", "646코퍼", "아일랜드", "청초수(신관)", "에이전트", "에그롤린대전", "개인일정"])).describe("관련 사업장 (다중 선택 가능)"),
       status: z.enum(["예정", "다음행동", "대기중", "언젠가", "진행 중", "완료"]).describe("진행 상태 (GTD)"),
       priority: z.enum(["긴급+중요", "중요", "긴급", "낮음"]).nullable().describe("우선순위 (아이젠하워)"),
       content: z.string().describe("업무 상세 내용"),

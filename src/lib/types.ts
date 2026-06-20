@@ -18,7 +18,7 @@ export interface WorkLog {
   id: string;
   title: string;
   date: string;
-  project: Project;
+  projects: Project[];
   status: Status;
   content: string;
   tags: Tag[];
@@ -45,7 +45,7 @@ export interface WorkLogFilters {
 export interface WorkLogFormData {
   title: string;
   date: string;
-  project: Project;
+  projects: Project[];
   status: Status;
   content: string;
   tags: Tag[];
@@ -118,7 +118,7 @@ export interface RecurringTemplate {
   name: string;
   frequency: Frequency;
   dayValues: number[];
-  defaultProject: Project;
+  defaultProjects: Project[];
   defaultStatus: Status;
   defaultTags: Tag[];
   defaultHours: number | null;
@@ -134,7 +134,7 @@ export interface TemplatePreset {
   description: string;
   frequency: Frequency;
   dayValues: number[];
-  defaultProject: Project;
+  defaultProjects: Project[];
   defaultStatus: Status;
   defaultTags: Tag[];
   defaultHours: number | null;
@@ -145,7 +145,7 @@ export interface RecurringTemplateFormData {
   name: string;
   frequency: Frequency;
   dayValues: number[];
-  defaultProject: Project;
+  defaultProjects: Project[];
   defaultStatus: Status;
   defaultTags: Tag[];
   defaultHours: number | null;

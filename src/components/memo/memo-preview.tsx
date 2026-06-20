@@ -158,9 +158,11 @@ export function MemoPreview({
             </div>
             <div className="flex flex-wrap gap-1.5 text-xs">
               <span className="text-muted-foreground">{entry.date}</span>
-              <Badge variant="secondary" className={PROJECT_COLORS[entry.project]}>
-                {entry.project}
-              </Badge>
+              {entry.projects.map((proj) => (
+                <Badge key={proj} variant="secondary" className={PROJECT_COLORS[proj]}>
+                  {proj}
+                </Badge>
+              ))}
               <Badge variant="secondary" className={STATUS_COLORS[entry.status]}>
                 {entry.status}
               </Badge>

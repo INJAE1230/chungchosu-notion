@@ -140,9 +140,11 @@ export function KanbanBoard({ initialLogs }: KanbanBoardProps) {
             <div className="rounded-lg border bg-card p-3 shadow-xl ring-2 ring-primary/30 w-[244px] rotate-2">
               <p className="text-sm font-medium truncate">{activeLog.title}</p>
               <div className="flex flex-wrap items-center gap-1 mt-1.5">
-                <Badge variant="secondary" className={`text-[10px] ${PROJECT_COLORS[activeLog.project]}`}>
-                  {activeLog.project}
-                </Badge>
+                {activeLog.projects.map((proj) => (
+                  <Badge key={proj} variant="secondary" className={`text-[10px] ${PROJECT_COLORS[proj]}`}>
+                    {proj}
+                  </Badge>
+                ))}
                 {activeLog.priority && (
                   <Badge variant="secondary" className={`text-[10px] ${PRIORITY_COLORS[activeLog.priority]}`}>
                     {activeLog.priority}

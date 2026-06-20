@@ -1,16 +1,17 @@
 import { notion, databaseId, getDataSourceId } from "./notion";
-import type { WorkLog, WorkLogFilters, WorkLogFormData, Tag, AchievementRating, InputSource, Priority, FileAttachment } from "./types";
+import type { WorkLog, WorkLogFilters, WorkLogFormData, Tag, AchievementRating, InputSource, Priority, FileAttachment, Project } from "./types";
 
 interface NotionPage {
   id: string;
   properties: Record<string, unknown>;
 }
 
-function mapProject(name: string | undefined | null): WorkLog["project"] {
-  if (name === "개인" || name === "개인일정") return "개인일정";
-  const validProjects = ["청초수", "씨푸드", "JS코퍼", "JKK", "646코퍼", "아일랜드", "청초수(신관)", "에이전트", "에그롤린대전"] as const;
-  if (name && (validProjects as readonly string[]).includes(name)) return name as WorkLog["project"];
-  return "청초수";
+const VALID_PROJECTS = new Set(["청초수", "씨푸드", "JS코퍼", "JKK", "646코퍼", "아일랜드", "청초수(신관)", "에이전트", "에그롤린대전", "개인일정"]);
+
+function mapProjects(items: { name: string }[] | undefined | null): Project[] {
+  if (!items || items.length === 0) return ["청초수"];
+  const mapped = items.map((i) => i.name).filter((n) => VALID_PROJECTS.has(n)) as Project[];
+  return mapped.length > 0 ? mapped : ["청초수"];
 }
 
 function mapPageToWorkLog(page: NotionPage): WorkLog {
@@ -18,7 +19,7 @@ function mapPageToWorkLog(page: NotionPage): WorkLog {
 
   const titleArr = p["업무"]?.title as { plain_text: string }[] | undefined;
   const dateObj = p["날짜"]?.date as { start: string } | null | undefined;
-  const selectObj = p["프로젝트"]?.select as { name: string } | null | undefined;
+  const projectMulti = p["프로젝트"]?.multi_select as { name: string }[] | undefined;
   const statusObj = p["진행상태"]?.status as { name: string } | null | undefined;
   const richText = p["업무내용"]?.rich_text as { plain_text: string }[] | undefined;
   const multiSelect = p["태그"]?.multi_select as { name: string }[] | undefined;
@@ -40,7 +41,7 @@ function mapPageToWorkLog(page: NotionPage): WorkLog {
     id: page.id,
     title: titleArr?.[0]?.plain_text || "",
     date: dateObj?.start || "",
-    project: mapProject(selectObj?.name),
+    projects: mapProjects(projectMulti),
     status: (statusObj?.name || "예정") as WorkLog["status"],
     content: richText?.[0]?.plain_text || "",
     tags: (multiSelect?.map((t) => t.name) || []) as Tag[],
@@ -73,7 +74,7 @@ function buildFilter(filters: WorkLogFilters) {
   if (filters.project) {
     conditions.push({
       property: "프로젝트",
-      select: { equals: filters.project },
+      multi_select: { contains: filters.project },
     });
   }
   if (filters.status) {
@@ -166,7 +167,7 @@ export async function createWorkLog(data: WorkLogFormData, meta?: { inputSource?
   const properties: Record<string, unknown> = {
     "업무": { title: [{ text: { content: data.title } }] },
     "날짜": { date: { start: data.date } },
-    "프로젝트": { select: { name: data.project } },
+    "프로젝트": { multi_select: data.projects.map((p) => ({ name: p })) },
     "진행상태": { status: { name: data.status } },
     "업무내용": { rich_text: [{ text: { content: data.content || "" } }] },
   };
@@ -240,8 +241,8 @@ export async function updateWorkLog(
   if (data.date !== undefined) {
     properties["날짜"] = { date: { start: data.date } };
   }
-  if (data.project !== undefined) {
-    properties["프로젝트"] = { select: { name: data.project } };
+  if (data.projects !== undefined) {
+    properties["프로젝트"] = { multi_select: data.projects.map((p) => ({ name: p })) };
   }
   if (data.status !== undefined) {
     properties["진행상태"] = { status: { name: data.status } };

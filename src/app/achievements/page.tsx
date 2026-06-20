@@ -93,9 +93,11 @@ export default async function AchievementsPage() {
                     </div>
                     <div className="flex flex-wrap gap-1.5 text-xs">
                       <span className="text-muted-foreground">{log.date}</span>
-                      <Badge variant="secondary" className={`text-xs ${PROJECT_COLORS[log.project]}`}>
-                        {log.project}
-                      </Badge>
+                      {log.projects.map((proj) => (
+                        <Badge key={proj} variant="secondary" className={`text-xs ${PROJECT_COLORS[proj]}`}>
+                          {proj}
+                        </Badge>
+                      ))}
                       {log.tags.map((tag) => (
                         <Badge key={tag} variant="secondary" className={`text-xs ${TAG_COLORS[tag]}`}>
                           {tag}

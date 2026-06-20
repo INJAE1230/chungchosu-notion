@@ -66,7 +66,9 @@ export function LogTable({ logs }: { logs: WorkLog[] }) {
               </DropdownMenu>
             </div>
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <Badge variant="secondary" className={PROJECT_COLORS[log.project]}>{log.project}</Badge>
+              {log.projects.map((proj) => (
+                <Badge key={proj} variant="secondary" className={PROJECT_COLORS[proj]}>{proj}</Badge>
+              ))}
               <Badge variant="secondary" className={STATUS_COLORS[log.status]}>{log.status}</Badge>
               {log.priority && (
                 <Badge variant="secondary" className={PRIORITY_COLORS[log.priority]}>{log.priority}</Badge>
@@ -107,9 +109,13 @@ export function LogTable({ logs }: { logs: WorkLog[] }) {
                 </TableCell>
                 <TableCell className="text-muted-foreground">{log.date}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className={PROJECT_COLORS[log.project]}>
-                    {log.project}
-                  </Badge>
+                  <div className="flex flex-wrap gap-1">
+                    {log.projects.map((proj) => (
+                      <Badge key={proj} variant="secondary" className={PROJECT_COLORS[proj]}>
+                        {proj}
+                      </Badge>
+                    ))}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <Badge variant="secondary" className={STATUS_COLORS[log.status]}>

@@ -21,7 +21,9 @@ export function computeStats(logs: WorkLog[]): DashboardStats {
   const weekMap = new Map<string, { count: number; hours: number }>();
 
   for (const log of logs) {
-    if (byProject[log.project] !== undefined) byProject[log.project]++;
+    for (const proj of log.projects) {
+      if (byProject[proj] !== undefined) byProject[proj]++;
+    }
     if (byStatus[log.status] !== undefined) byStatus[log.status]++;
     if (log.priority && byPriority[log.priority] !== undefined) byPriority[log.priority]++;
     for (const tag of log.tags) {

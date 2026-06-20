@@ -191,9 +191,11 @@ export function CalendarView({ logs }: CalendarViewProps) {
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <Badge variant="secondary" className={`text-xs ${PROJECT_COLORS[log.project]}`}>
-                        {log.project}
-                      </Badge>
+                      {log.projects.map((proj) => (
+                        <Badge key={proj} variant="secondary" className={`text-xs ${PROJECT_COLORS[proj]}`}>
+                          {proj}
+                        </Badge>
+                      ))}
                       <Badge variant="secondary" className={`text-xs ${STATUS_COLORS[log.status]}`}>
                         {log.status}
                       </Badge>

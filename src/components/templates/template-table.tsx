@@ -90,7 +90,7 @@ export function TemplateTable({
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {tmpl.frequency} {formatDay(tmpl)} · {tmpl.defaultProject}
+                  {tmpl.frequency} {formatDay(tmpl)} · {tmpl.defaultProjects.join(", ")}
                   {tmpl.defaultHours ? ` · ${tmpl.defaultHours}시간` : ""}
                 </p>
                 {tmpl.defaultTags.length > 0 && (
@@ -161,7 +161,7 @@ export function TemplateTable({
                   <TableCell>
                     {tmpl.frequency} {formatDay(tmpl)}
                   </TableCell>
-                  <TableCell>{tmpl.defaultProject}</TableCell>
+                  <TableCell>{tmpl.defaultProjects.join(", ")}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {tmpl.defaultTags.map((tag) => (

@@ -20,7 +20,7 @@ export function CsvDownload({ logs }: { logs: WorkLog[] }) {
       [
         log.date,
         escapeCsv(log.title),
-        log.project,
+        escapeCsv(log.projects.join("/")),
         log.status,
         log.priority || "",
         escapeCsv(log.tags.join("/")),

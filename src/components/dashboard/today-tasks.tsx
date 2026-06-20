@@ -55,9 +55,11 @@ export function TodayTasks({ logs }: { logs: WorkLog[] }) {
                   }`}>
                     {log.title}
                   </span>
-                  <Badge variant="secondary" className={`text-[11px] shrink-0 ${PROJECT_COLORS[log.project]}`}>
-                    {log.project}
-                  </Badge>
+                  {log.projects.map((proj) => (
+                    <Badge key={proj} variant="secondary" className={`text-[11px] shrink-0 ${PROJECT_COLORS[proj]}`}>
+                      {proj}
+                    </Badge>
+                  ))}
                 </Link>
               );
             })}

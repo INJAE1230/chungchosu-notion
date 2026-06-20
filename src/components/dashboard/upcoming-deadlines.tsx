@@ -61,9 +61,11 @@ export function UpcomingDeadlines({ logs }: { logs: WorkLog[] }) {
                   <p className="text-sm truncate">{log.title}</p>
                   <p className="text-[11px] text-muted-foreground">{log.date}</p>
                 </div>
-                <Badge variant="secondary" className={`text-[11px] shrink-0 ${PROJECT_COLORS[log.project]}`}>
-                  {log.project}
-                </Badge>
+                {log.projects.map((proj) => (
+                  <Badge key={proj} variant="secondary" className={`text-[11px] shrink-0 ${PROJECT_COLORS[proj]}`}>
+                    {proj}
+                  </Badge>
+                ))}
                 <span className={`text-[11px] font-medium shrink-0 ${getUrgencyColor(log.daysUntil)}`}>
                   {getUrgencyLabel(log.daysUntil)}
                 </span>

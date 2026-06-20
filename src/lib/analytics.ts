@@ -10,7 +10,10 @@ export function computeTimeAllocation(logs: WorkLog[]): TimeAllocation[] {
 
   for (const log of logs) {
     const h = log.hours || 0;
-    projectHours[log.project] = (projectHours[log.project] || 0) + h;
+    const share = log.projects.length > 0 ? h / log.projects.length : h;
+    for (const proj of log.projects) {
+      projectHours[proj] = (projectHours[proj] || 0) + share;
+    }
     total += h;
   }
 

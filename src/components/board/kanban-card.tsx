@@ -50,9 +50,11 @@ export function KanbanCard({ log }: KanbanCardProps) {
     >
       <p className="text-sm font-medium truncate">{log.title}</p>
       <div className="flex flex-wrap items-center gap-1 mt-1.5">
-        <Badge variant="secondary" className={`text-[10px] ${PROJECT_COLORS[log.project]}`}>
-          {log.project}
-        </Badge>
+        {log.projects.map((proj) => (
+          <Badge key={proj} variant="secondary" className={`text-[10px] ${PROJECT_COLORS[proj]}`}>
+            {proj}
+          </Badge>
+        ))}
         {log.priority && (
           <Badge variant="secondary" className={`text-[10px] ${PRIORITY_COLORS[log.priority]}`}>
             {log.priority}

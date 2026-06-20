@@ -35,7 +35,7 @@ function mapPageToTemplate(page: NotionPage): RecurringTemplate {
   const freqObj = p["반복주기"]?.select as { name: string } | null | undefined;
   const dayNum = p["반복일"]?.number as number | null | undefined;
   const dayListArr = p["반복요일목록"]?.rich_text as { plain_text: string }[] | undefined;
-  const projObj = p["기본프로젝트"]?.select as { name: string } | null | undefined;
+  const projArr = p["기본프로젝트"]?.multi_select as { name: string }[] | undefined;
   const statusObj = p["기본상태"]?.select as { name: string } | null | undefined;
   const tagsArr = p["기본태그"]?.multi_select as { name: string }[] | undefined;
   const hoursNum = p["기본소요시간"]?.number as number | null | undefined;
@@ -48,7 +48,7 @@ function mapPageToTemplate(page: NotionPage): RecurringTemplate {
     name: titleArr?.[0]?.plain_text || "",
     frequency: (freqObj?.name || "매주") as Frequency,
     dayValues: parseDayValues(dayListArr?.[0]?.plain_text, dayNum),
-    defaultProject: (projObj?.name || "청초수") as RecurringTemplate["defaultProject"],
+    defaultProjects: (projArr?.map((p) => p.name) || ["청초수"]) as RecurringTemplate["defaultProjects"],
     defaultStatus: (statusObj?.name || "예정") as RecurringTemplate["defaultStatus"],
     defaultTags: (tagsArr?.map((t) => t.name) || []) as Tag[],
     defaultHours: hoursNum ?? null,
@@ -91,7 +91,7 @@ export async function createTemplate(data: RecurringTemplateFormData): Promise<s
     "반복주기": { select: { name: data.frequency } },
     "반복일": { number: data.dayValues[0] },
     "반복요일목록": { rich_text: [{ text: { content: data.dayValues.join(",") } }] },
-    "기본프로젝트": { select: { name: data.defaultProject } },
+    "기본프로젝트": { multi_select: data.defaultProjects.map((p) => ({ name: p })) },
     "기본상태": { select: { name: data.defaultStatus } },
     "업무내용": { rich_text: [{ text: { content: data.content || "" } }] },
     "활성": { checkbox: data.active },
@@ -131,8 +131,8 @@ export async function updateTemplate(
     properties["반복일"] = { number: data.dayValues[0] };
     properties["반복요일목록"] = { rich_text: [{ text: { content: data.dayValues.join(",") } }] };
   }
-  if (data.defaultProject !== undefined) {
-    properties["기본프로젝트"] = { select: { name: data.defaultProject } };
+  if (data.defaultProjects !== undefined) {
+    properties["기본프로젝트"] = { multi_select: data.defaultProjects.map((p) => ({ name: p })) };
   }
   if (data.defaultStatus !== undefined) {
     properties["기본상태"] = { select: { name: data.defaultStatus } };
@@ -231,7 +231,7 @@ export async function generateWorkLogs(
       const formData: WorkLogFormData = {
         title: tmpl.name,
         date,
-        project: tmpl.defaultProject,
+        projects: tmpl.defaultProjects,
         status: tmpl.defaultStatus,
         content: tmpl.content,
         tags: tmpl.defaultTags,
@@ -268,7 +268,7 @@ export async function generateAutoWorkLogs(): Promise<{ generated: number; title
         continue;
       }
       await createWorkLog({
-        title: tmpl.name, date, project: tmpl.defaultProject,
+        title: tmpl.name, date, projects: tmpl.defaultProjects,
         status: tmpl.defaultStatus, content: tmpl.content,
         tags: tmpl.defaultTags, hours: tmpl.defaultHours, link: null,
       }, { inputSource: "웹" });
@@ -286,7 +286,7 @@ export async function generateAutoWorkLogs(): Promise<{ generated: number; title
           continue;
         }
         await createWorkLog({
-          title: tmpl.name, date, project: tmpl.defaultProject,
+          title: tmpl.name, date, projects: tmpl.defaultProjects,
           status: tmpl.defaultStatus, content: tmpl.content,
           tags: tmpl.defaultTags, hours: tmpl.defaultHours, link: null,
         }, { inputSource: "웹" });

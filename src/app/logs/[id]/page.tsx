@@ -88,9 +88,11 @@ export default async function LogDetailPage({
 
           {/* 상태 + 우선순위 + 프로젝트 + 태그 */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="secondary" className={PROJECT_COLORS[log.project]}>
-              {log.project}
-            </Badge>
+            {log.projects.map((proj) => (
+              <Badge key={proj} variant="secondary" className={PROJECT_COLORS[proj]}>
+                {proj}
+              </Badge>
+            ))}
             <StatusQuickChange
               logId={id}
               currentStatus={log.status}
