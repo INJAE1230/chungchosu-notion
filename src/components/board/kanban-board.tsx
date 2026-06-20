@@ -21,9 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { STATUSES, STATUS_COLORS, PROJECT_COLORS, PRIORITY_COLORS, PROJECTS } from "@/lib/constants";
+import { STATUS_COLORS, PROJECT_COLORS, PRIORITY_COLORS, PROJECTS } from "@/lib/constants";
 import { KanbanCard } from "./kanban-card";
 import type { WorkLog, Status, Project } from "@/lib/types";
+
+const KANBAN_STATUSES: Status[] = ["예정", "다음행동", "진행 중", "대기중", "완료", "언젠가"];
 
 interface KanbanBoardProps {
   initialLogs: WorkLog[];
@@ -151,7 +153,7 @@ export function KanbanBoard({ initialLogs }: KanbanBoardProps) {
         onDragEnd={handleDragEnd}
       >
         <div className="flex gap-3 overflow-x-auto pb-4">
-          {STATUSES.map((status) => (
+          {KANBAN_STATUSES.map((status) => (
             <KanbanColumn
               key={status}
               status={status}
