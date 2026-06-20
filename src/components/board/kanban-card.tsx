@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useDraggable } from "@dnd-kit/core";
 import { Badge } from "@/components/ui/badge";
 import { PROJECT_COLORS, PRIORITY_COLORS } from "@/lib/constants";
@@ -10,6 +12,9 @@ interface KanbanCardProps {
 }
 
 export function KanbanCard({ log }: KanbanCardProps) {
+  const router = useRouter();
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: log.id, data: { log } });
 
@@ -25,7 +30,21 @@ export function KanbanCard({ log }: KanbanCardProps) {
       style={style}
       {...listeners}
       {...attributes}
-      className={`rounded-lg border bg-card p-3 shadow-sm cursor-grab active:cursor-grabbing transition-shadow ${
+      onPointerDown={(e) => {
+        pointerStart.current = { x: e.clientX, y: e.clientY };
+        listeners?.onPointerDown?.(e as never);
+      }}
+      onPointerUp={(e) => {
+        if (pointerStart.current) {
+          const dx = Math.abs(e.clientX - pointerStart.current.x);
+          const dy = Math.abs(e.clientY - pointerStart.current.y);
+          if (dx < 5 && dy < 5) {
+            router.push(`/logs/${log.id}`);
+          }
+        }
+        pointerStart.current = null;
+      }}
+      className={`rounded-lg border bg-card p-3 shadow-sm cursor-pointer transition-shadow ${
         isDragging ? "opacity-50 shadow-lg ring-2 ring-primary/30" : "hover:shadow-md"
       }`}
     >
