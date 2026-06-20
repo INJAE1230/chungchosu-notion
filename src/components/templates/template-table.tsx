@@ -82,6 +82,9 @@ export function TemplateTable({
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm">{tmpl.name}</span>
+                  {tmpl.autoGenerate && (
+                    <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">자동</Badge>
+                  )}
                   {!tmpl.active && (
                     <Badge variant="secondary" className="text-xs">비활성</Badge>
                   )}
@@ -176,11 +179,16 @@ export function TemplateTable({
                     {tmpl.defaultHours ? `${tmpl.defaultHours}h` : "-"}
                   </TableCell>
                   <TableCell>
-                    {tmpl.active ? (
-                      <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">활성</Badge>
-                    ) : (
-                      <Badge variant="secondary">비활성</Badge>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {tmpl.active ? (
+                        <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">활성</Badge>
+                      ) : (
+                        <Badge variant="secondary">비활성</Badge>
+                      )}
+                      {tmpl.autoGenerate && (
+                        <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">자동</Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

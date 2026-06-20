@@ -124,6 +124,7 @@ export interface RecurringTemplate {
   defaultHours: number | null;
   content: string;
   active: boolean;
+  autoGenerate: boolean;
 }
 
 export interface TemplatePreset {
@@ -150,4 +151,5 @@ export interface RecurringTemplateFormData {
   defaultHours: number | null;
   content: string;
   active: boolean;
+  autoGenerate: boolean;
 }

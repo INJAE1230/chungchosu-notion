@@ -41,6 +41,7 @@ function mapPageToTemplate(page: NotionPage): RecurringTemplate {
   const hoursNum = p["기본소요시간"]?.number as number | null | undefined;
   const richText = p["업무내용"]?.rich_text as { plain_text: string }[] | undefined;
   const activeVal = p["활성"]?.checkbox as boolean | undefined;
+  const autoVal = p["자동생성"]?.checkbox as boolean | undefined;
 
   return {
     id: page.id,
@@ -53,6 +54,7 @@ function mapPageToTemplate(page: NotionPage): RecurringTemplate {
     defaultHours: hoursNum ?? null,
     content: richText?.[0]?.plain_text || "",
     active: activeVal ?? true,
+    autoGenerate: autoVal ?? false,
   };
 }
 
@@ -93,6 +95,7 @@ export async function createTemplate(data: RecurringTemplateFormData): Promise<s
     "기본상태": { select: { name: data.defaultStatus } },
     "업무내용": { rich_text: [{ text: { content: data.content || "" } }] },
     "활성": { checkbox: data.active },
+    "자동생성": { checkbox: data.autoGenerate },
   };
 
   if (data.defaultTags.length > 0) {
@@ -147,6 +150,9 @@ export async function updateTemplate(
   }
   if (data.active !== undefined) {
     properties["활성"] = { checkbox: data.active };
+  }
+  if (data.autoGenerate !== undefined) {
+    properties["자동생성"] = { checkbox: data.autoGenerate };
   }
 
   await notion.pages.update({
@@ -235,6 +241,57 @@ export async function generateWorkLogs(
 
       await createWorkLog(formData, { inputSource: "웹" });
       titles.push(tmpl.name);
+    }
+  }
+
+  return { generated: titles.length, titles, skipped };
+}
+
+export async function generateAutoWorkLogs(): Promise<{ generated: number; titles: string[]; skipped: string[] }> {
+  const templates = (await getAllTemplates()).filter((t) => t.active && t.autoGenerate);
+
+  const weeklyTemplates = templates.filter((t) => t.frequency === "매주");
+  const monthlyTemplates = templates.filter((t) => t.frequency === "매월");
+
+  const titles: string[] = [];
+  const skipped: string[] = [];
+
+  const now = getKSTNow();
+  const isFirstOfMonth = now.getDate() === 1;
+
+  for (const tmpl of weeklyTemplates) {
+    for (const day of tmpl.dayValues) {
+      const date = getWeekDate(day);
+      const existing = await queryWorkLogs({ search: tmpl.name, dateFrom: date, dateTo: date });
+      if (existing.some((log) => log.title === tmpl.name)) {
+        skipped.push(tmpl.name);
+        continue;
+      }
+      await createWorkLog({
+        title: tmpl.name, date, project: tmpl.defaultProject,
+        status: tmpl.defaultStatus, content: tmpl.content,
+        tags: tmpl.defaultTags, hours: tmpl.defaultHours, link: null,
+      }, { inputSource: "웹" });
+      titles.push(tmpl.name);
+    }
+  }
+
+  if (isFirstOfMonth) {
+    for (const tmpl of monthlyTemplates) {
+      for (const day of tmpl.dayValues) {
+        const date = getMonthDate(day);
+        const existing = await queryWorkLogs({ search: tmpl.name, dateFrom: date, dateTo: date });
+        if (existing.some((log) => log.title === tmpl.name)) {
+          skipped.push(tmpl.name);
+          continue;
+        }
+        await createWorkLog({
+          title: tmpl.name, date, project: tmpl.defaultProject,
+          status: tmpl.defaultStatus, content: tmpl.content,
+          tags: tmpl.defaultTags, hours: tmpl.defaultHours, link: null,
+        }, { inputSource: "웹" });
+        titles.push(tmpl.name);
+      }
     }
   }
 

@@ -59,6 +59,7 @@ export function TemplateFormDialog({
     defaultHours: template?.defaultHours ?? initialData?.defaultHours ?? null,
     content: template?.content || initialData?.content || "",
     active: template?.active ?? true,
+    autoGenerate: template?.autoGenerate ?? false,
   });
   const [loading, setLoading] = useState(false);
 
@@ -292,6 +293,30 @@ export function TemplateFormDialog({
               placeholder="기본 업무 내용을 입력하세요"
               rows={3}
             />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <p className="text-sm font-medium">자동 생성</p>
+              <p className="text-xs text-muted-foreground">
+                매주 월요일에 자동으로 업무를 생성합니다
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.autoGenerate}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                form.autoGenerate ? "bg-primary" : "bg-muted"
+              }`}
+              onClick={() => setForm({ ...form, autoGenerate: !form.autoGenerate })}
+            >
+              <span
+                className={`pointer-events-none block h-4 w-4 rounded-full bg-background shadow-sm transition-transform ${
+                  form.autoGenerate ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
           </div>
 
           <div className="flex gap-3 pt-2">

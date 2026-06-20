@@ -49,6 +49,7 @@ export function TemplateGalleryDialog({
       defaultTags: preset.defaultTags,
       defaultHours: preset.defaultHours,
       content: preset.content,
+      autoGenerate: false,
     });
     onClose();
   };
