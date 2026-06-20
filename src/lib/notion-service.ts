@@ -8,8 +8,9 @@ interface NotionPage {
 
 function mapProject(name: string | undefined | null): WorkLog["project"] {
   if (name === "개인" || name === "개인일정") return "개인일정";
-  if (name === "업무" || name === "내부" || name === "클라이언트") return "업무";
-  return "업무";
+  const validProjects = ["청초수", "씨푸드", "JS코퍼", "JKK", "646코퍼", "아일랜드", "청초수(신관)", "에이전트", "에그롤린대전"] as const;
+  if (name && (validProjects as readonly string[]).includes(name)) return name as WorkLog["project"];
+  return "청초수";
 }
 
 function mapPageToWorkLog(page: NotionPage): WorkLog {

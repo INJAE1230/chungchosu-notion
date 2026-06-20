@@ -30,7 +30,7 @@ export function LogForm({ log }: { log?: WorkLog }) {
   const [form, setForm] = useState<WorkLogFormData>({
     title: log?.title || "",
     date: log?.date || getToday(),
-    project: log?.project || "업무",
+    project: log?.project || "청초수",
     status: log?.status || "다음행동",
     priority: log?.priority || null,
     content: log?.content || "",

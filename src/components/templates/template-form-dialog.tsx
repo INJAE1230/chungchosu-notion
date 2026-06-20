@@ -53,7 +53,7 @@ export function TemplateFormDialog({
     name: template?.name || initialData?.name || "",
     frequency: template?.frequency || initialData?.frequency || "매주",
     dayValues: template?.dayValues || initialData?.dayValues || [1],
-    defaultProject: template?.defaultProject || initialData?.defaultProject || "업무",
+    defaultProject: template?.defaultProject || initialData?.defaultProject || "청초수",
     defaultStatus: template?.defaultStatus || initialData?.defaultStatus || "예정",
     defaultTags: template?.defaultTags || initialData?.defaultTags || [],
     defaultHours: template?.defaultHours ?? initialData?.defaultHours ?? null,

@@ -48,7 +48,7 @@ function mapPageToTemplate(page: NotionPage): RecurringTemplate {
     name: titleArr?.[0]?.plain_text || "",
     frequency: (freqObj?.name || "매주") as Frequency,
     dayValues: parseDayValues(dayListArr?.[0]?.plain_text, dayNum),
-    defaultProject: (projObj?.name || "업무") as RecurringTemplate["defaultProject"],
+    defaultProject: (projObj?.name || "청초수") as RecurringTemplate["defaultProject"],
     defaultStatus: (statusObj?.name || "예정") as RecurringTemplate["defaultStatus"],
     defaultTags: (tagsArr?.map((t) => t.name) || []) as Tag[],
     defaultHours: hoursNum ?? null,
