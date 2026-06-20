@@ -5,8 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DashboardStats } from "@/lib/types";
 
 const STATUS_DATA = [
-  { key: "예정" as const, color: "#eab308" },
+  { key: "다음행동" as const, color: "#818cf8" },
   { key: "진행 중" as const, color: "#6366f1" },
+  { key: "대기중" as const, color: "#fb923c" },
+  { key: "예정" as const, color: "#eab308" },
+  { key: "언젠가" as const, color: "#94a3b8" },
   { key: "완료" as const, color: "#22c55e" },
 ];
 

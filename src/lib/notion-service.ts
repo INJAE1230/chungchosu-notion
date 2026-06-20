@@ -1,5 +1,5 @@
 import { notion, databaseId, getDataSourceId } from "./notion";
-import type { WorkLog, WorkLogFilters, WorkLogFormData, Tag, AchievementRating, InputSource, FileAttachment } from "./types";
+import type { WorkLog, WorkLogFilters, WorkLogFormData, Tag, AchievementRating, InputSource, Priority, FileAttachment } from "./types";
 
 interface NotionPage {
   id: string;
@@ -27,6 +27,7 @@ function mapPageToWorkLog(page: NotionPage): WorkLog {
   const ratingObj = p["성과등급"]?.select as { name: string } | null | undefined;
   const sourceObj = p["입력소스"]?.select as { name: string } | null | undefined;
   const originalTextArr = p["입력원본"]?.rich_text as { plain_text: string }[] | undefined;
+  const priorityObj = p["우선순위"]?.select as { name: string } | null | undefined;
   const filesArr = p["첨부파일"]?.files as { name: string; type: string; external?: { url: string }; file?: { url: string } }[] | undefined;
 
   const attachments: FileAttachment[] = (filesArr || []).map((f) => ({
@@ -44,6 +45,7 @@ function mapPageToWorkLog(page: NotionPage): WorkLog {
     tags: (multiSelect?.map((t) => t.name) || []) as Tag[],
     hours: numberVal ?? null,
     link: urlVal ?? null,
+    priority: (priorityObj?.name as Priority) || null,
     outcome: outcomeText?.[0]?.plain_text || null,
     rating: (ratingObj?.name as AchievementRating) || null,
     inputSource: (sourceObj?.name as InputSource) || null,
@@ -77,6 +79,12 @@ function buildFilter(filters: WorkLogFilters) {
     conditions.push({
       property: "진행상태",
       status: { equals: filters.status },
+    });
+  }
+  if (filters.priority) {
+    conditions.push({
+      property: "우선순위",
+      select: { equals: filters.priority },
     });
   }
   if (filters.tags && filters.tags.length > 0) {
@@ -178,6 +186,9 @@ export async function createWorkLog(data: WorkLogFormData, meta?: { inputSource?
   if (data.link) {
     properties["관련 링크"] = { url: data.link };
   }
+  if (data.priority) {
+    properties["우선순위"] = { select: { name: data.priority } };
+  }
   if (data.outcome) {
     properties["성과/결과"] = { rich_text: [{ text: { content: data.outcome } }] };
   }
@@ -258,6 +269,9 @@ export async function updateWorkLog(
     properties["관련 링크"] = { url: data.link || null };
   }
   const optionalProperties: Record<string, unknown> = {};
+  if (data.priority !== undefined) {
+    optionalProperties["우선순위"] = data.priority ? { select: { name: data.priority } } : { select: null };
+  }
   if (data.outcome !== undefined) {
     optionalProperties["성과/결과"] = {
       rich_text: data.outcome ? [{ text: { content: data.outcome } }] : [],

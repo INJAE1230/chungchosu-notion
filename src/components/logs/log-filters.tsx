@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, SlidersHorizontal, ChevronDown, ChevronUp } from "lucide-react";
-import { PROJECTS, STATUSES, TAGS, TAG_COLORS } from "@/lib/constants";
+import { PROJECTS, STATUSES, PRIORITIES, TAGS, TAG_COLORS } from "@/lib/constants";
 import type { Tag } from "@/lib/types";
 
 export function LogFilters() {
@@ -56,6 +56,7 @@ export function LogFilters() {
     searchParams.has("project") ||
     searchParams.has("status") ||
     searchParams.has("tags") ||
+    searchParams.has("priority") ||
     searchParams.has("search");
 
   const filterCount = [
@@ -63,6 +64,7 @@ export function LogFilters() {
     searchParams.has("dateTo"),
     searchParams.has("project"),
     searchParams.has("status"),
+    searchParams.has("priority"),
     searchParams.has("tags"),
     searchParams.has("search"),
   ].filter(Boolean).length;
@@ -140,6 +142,23 @@ export function LogFilters() {
               {STATUSES.map((s) => (
                 <SelectItem key={s} value={s}>
                   {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={searchParams.get("priority") || "all"}
+            onValueChange={(v) => updateParam("priority", v === "all" ? null : v)}
+          >
+            <SelectTrigger className="w-full sm:w-[130px] h-10">
+              <SelectValue placeholder="우선순위" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체 우선순위</SelectItem>
+              {PRIORITIES.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { STATUS_COLORS, PROJECT_COLORS, TAG_COLORS } from "@/lib/constants";
+import { STATUS_COLORS, PROJECT_COLORS, TAG_COLORS, PRIORITY_COLORS } from "@/lib/constants";
 import { DeleteDialog } from "./delete-dialog";
 import { useState } from "react";
 import type { WorkLog } from "@/lib/types";
@@ -68,6 +68,9 @@ export function LogTable({ logs }: { logs: WorkLog[] }) {
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
               <Badge variant="secondary" className={PROJECT_COLORS[log.project]}>{log.project}</Badge>
               <Badge variant="secondary" className={STATUS_COLORS[log.status]}>{log.status}</Badge>
+              {log.priority && (
+                <Badge variant="secondary" className={PRIORITY_COLORS[log.priority]}>{log.priority}</Badge>
+              )}
               {log.tags.map((tag) => (
                 <Badge key={tag} variant="secondary" className={`text-xs ${TAG_COLORS[tag]}`}>{tag}</Badge>
               ))}
@@ -88,6 +91,7 @@ export function LogTable({ logs }: { logs: WorkLog[] }) {
               <TableHead className="w-[100px]">날짜</TableHead>
               <TableHead className="w-[90px]">프로젝트</TableHead>
               <TableHead className="w-[80px]">상태</TableHead>
+              <TableHead className="w-[90px]">우선순위</TableHead>
               <TableHead className="w-[140px]">태그</TableHead>
               <TableHead className="w-[80px] text-right">소요시간</TableHead>
               <TableHead className="w-[50px]" />
@@ -111,6 +115,15 @@ export function LogTable({ logs }: { logs: WorkLog[] }) {
                   <Badge variant="secondary" className={STATUS_COLORS[log.status]}>
                     {log.status}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  {log.priority ? (
+                    <Badge variant="secondary" className={PRIORITY_COLORS[log.priority]}>
+                      {log.priority}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">

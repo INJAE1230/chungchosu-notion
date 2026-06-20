@@ -136,6 +136,12 @@ export function CalendarView({ logs }: CalendarViewProps) {
                             ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
                             : log.status === "진행 중"
                             ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                            : log.status === "다음행동"
+                            ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300"
+                            : log.status === "대기중"
+                            ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
+                            : log.status === "언젠가"
+                            ? "bg-slate-100 text-slate-600 dark:bg-slate-800/30 dark:text-slate-400"
                             : "bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300"
                         }`}
                       >
@@ -154,7 +160,10 @@ export function CalendarView({ logs }: CalendarViewProps) {
                           key={log.id}
                           className={`h-1.5 w-1.5 rounded-full ${
                             log.status === "완료" ? "bg-green-500" :
-                            log.status === "진행 중" ? "bg-blue-500" : "bg-gray-400"
+                            log.status === "진행 중" ? "bg-blue-500" :
+                            log.status === "다음행동" ? "bg-indigo-500" :
+                            log.status === "대기중" ? "bg-orange-500" :
+                            log.status === "언젠가" ? "bg-slate-400" : "bg-gray-400"
                           }`}
                         />
                       ))}

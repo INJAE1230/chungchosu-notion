@@ -11,7 +11,7 @@ export function SummaryCards({ stats }: { stats: DashboardStats }) {
 
   const cards = [
     { title: "총 업무", value: stats.totalLogs, unit: "건" },
-    { title: "총 소요시간", value: stats.totalHours, unit: "시간" },
+    { title: "다음행동", value: stats.byStatus["다음행동"] || 0, unit: "건" },
     { title: "진행 중", value: stats.byStatus["진행 중"] || 0, unit: "건" },
     { title: "완료율", value: completionRate, unit: "%" },
   ];

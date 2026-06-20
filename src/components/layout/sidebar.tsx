@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { useState } from "react";
 import {
   ClipboardList,
+  ClipboardCheck,
   LayoutDashboard,
   Plus,
   Moon,
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { href: "/logs", label: "업무 목록", icon: ClipboardList },
   { href: "/logs/new", label: "업무 추가", icon: Plus },
   { href: "/templates", label: "반복 템플릿", icon: Repeat },
+  { href: "/review", label: "주간 리뷰", icon: ClipboardCheck },
   { href: "/calendar", label: "캘린더", icon: Calendar },
   { href: "/achievements", label: "성과 관리", icon: Trophy },
   { href: "/reports", label: "보고서", icon: FileText },

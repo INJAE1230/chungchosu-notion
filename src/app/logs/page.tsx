@@ -18,6 +18,7 @@ async function LogList({ searchParams }: { searchParams: Record<string, string> 
   if (searchParams.project) filters.project = searchParams.project as WorkLogFilters["project"];
   if (searchParams.status) filters.status = searchParams.status as WorkLogFilters["status"];
   if (searchParams.tags) filters.tags = searchParams.tags.split(",") as WorkLogFilters["tags"];
+  if (searchParams.priority) filters.priority = searchParams.priority as WorkLogFilters["priority"];
   if (searchParams.search) filters.search = searchParams.search;
 
   const logs = await queryWorkLogs(

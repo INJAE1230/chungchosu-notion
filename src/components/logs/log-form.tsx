@@ -14,10 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { PROJECTS, STATUSES, TAGS, TAG_COLORS, ACHIEVEMENT_RATINGS } from "@/lib/constants";
+import { PROJECTS, STATUSES, PRIORITIES, TAGS, TAG_COLORS, PRIORITY_COLORS, ACHIEVEMENT_RATINGS } from "@/lib/constants";
 import { FileUpload } from "@/components/file-upload";
 import type { OcrResult } from "@/components/file-upload";
-import type { WorkLog, WorkLogFormData, Tag, AchievementRating } from "@/lib/types";
+import type { WorkLog, WorkLogFormData, Tag, Priority, AchievementRating } from "@/lib/types";
 
 function getToday() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().split("T")[0];
@@ -31,7 +31,8 @@ export function LogForm({ log }: { log?: WorkLog }) {
     title: log?.title || "",
     date: log?.date || getToday(),
     project: log?.project || "업무",
-    status: log?.status || "예정",
+    status: log?.status || "다음행동",
+    priority: log?.priority || null,
     content: log?.content || "",
     tags: log?.tags || [],
     hours: log?.hours ?? null,
@@ -116,7 +117,7 @@ export function LogForm({ log }: { log?: WorkLog }) {
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">날짜</label>
           <Input
@@ -162,6 +163,28 @@ export function LogForm({ log }: { log?: WorkLog }) {
               {STATUSES.map((s) => (
                 <SelectItem key={s} value={s}>
                   {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">우선순위</label>
+          <Select
+            value={form.priority || "none"}
+            onValueChange={(v) =>
+              setForm({ ...form, priority: v === "none" ? null : (v as Priority) })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="미설정" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">미설정</SelectItem>
+              {PRIORITIES.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
                 </SelectItem>
               ))}
             </SelectContent>

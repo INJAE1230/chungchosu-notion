@@ -1,7 +1,8 @@
 export type Frequency = "매주" | "매월";
 export type PresetCategory = "정기 보고" | "정산/회계" | "회의" | "관리 업무";
 export type Project = "업무" | "개인일정";
-export type Status = "예정" | "진행 중" | "완료";
+export type Status = "예정" | "다음행동" | "대기중" | "언젠가" | "진행 중" | "완료";
+export type Priority = "긴급+중요" | "중요" | "긴급" | "낮음";
 export type Tag = "회의" | "개발" | "기획" | "리뷰" | "버그";
 export type AchievementRating = "상" | "중" | "하";
 export type InputSource = "웹" | "카카오톡" | "슬랙" | "빠른메모";
@@ -23,6 +24,7 @@ export interface WorkLog {
   tags: Tag[];
   hours: number | null;
   link: string | null;
+  priority: Priority | null;
   outcome: string | null;
   rating: AchievementRating | null;
   inputSource: InputSource | null;
@@ -36,6 +38,7 @@ export interface WorkLogFilters {
   project?: Project;
   status?: Status;
   tags?: Tag[];
+  priority?: Priority;
   search?: string;
 }
 
@@ -48,6 +51,7 @@ export interface WorkLogFormData {
   tags: Tag[];
   hours: number | null;
   link: string | null;
+  priority?: Priority | null;
   outcome?: string | null;
   rating?: AchievementRating | null;
   attachments?: FileAttachment[];
@@ -58,6 +62,7 @@ export interface DashboardStats {
   totalHours: number;
   byProject: Record<Project, number>;
   byStatus: Record<Status, number>;
+  byPriority: Record<Priority, number>;
   byTag: Record<Tag, number>;
   weeklyVolume: { week: string; count: number; hours: number }[];
 }

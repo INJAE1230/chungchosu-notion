@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { STATUS_COLORS, PROJECT_COLORS, TAG_COLORS } from "@/lib/constants";
+import { STATUS_COLORS, PROJECT_COLORS, TAG_COLORS, PRIORITY_COLORS } from "@/lib/constants";
 import { Paperclip } from "lucide-react";
 import type { WorkLogFormData } from "@/lib/types";
 
@@ -148,6 +148,11 @@ export function MemoPreview({
               <Badge variant="secondary" className={STATUS_COLORS[entry.status]}>
                 {entry.status}
               </Badge>
+              {entry.priority && (
+                <Badge variant="secondary" className={PRIORITY_COLORS[entry.priority]}>
+                  {entry.priority}
+                </Badge>
+              )}
               {entry.tags.map((tag) => (
                 <Badge key={tag} variant="secondary" className={TAG_COLORS[tag]}>
                   {tag}

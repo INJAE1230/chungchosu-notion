@@ -1,7 +1,7 @@
 import { startOfWeek, format } from "date-fns";
 import { ko } from "date-fns/locale";
-import type { WorkLog, DashboardStats, Project, Status, Tag } from "./types";
-import { PROJECTS, STATUSES, TAGS } from "./constants";
+import type { WorkLog, DashboardStats, Project, Status, Priority, Tag } from "./types";
+import { PROJECTS, STATUSES, PRIORITIES, TAGS } from "./constants";
 
 export function computeStats(logs: WorkLog[]): DashboardStats {
   const byProject = Object.fromEntries(
@@ -10,6 +10,9 @@ export function computeStats(logs: WorkLog[]): DashboardStats {
   const byStatus = Object.fromEntries(
     STATUSES.map((s) => [s, 0])
   ) as Record<Status, number>;
+  const byPriority = Object.fromEntries(
+    PRIORITIES.map((p) => [p, 0])
+  ) as Record<Priority, number>;
   const byTag = Object.fromEntries(
     TAGS.map((t) => [t, 0])
   ) as Record<Tag, number>;
@@ -20,6 +23,7 @@ export function computeStats(logs: WorkLog[]): DashboardStats {
   for (const log of logs) {
     if (byProject[log.project] !== undefined) byProject[log.project]++;
     if (byStatus[log.status] !== undefined) byStatus[log.status]++;
+    if (log.priority && byPriority[log.priority] !== undefined) byPriority[log.priority]++;
     for (const tag of log.tags) {
       if (byTag[tag] !== undefined) byTag[tag]++;
     }
@@ -44,6 +48,7 @@ export function computeStats(logs: WorkLog[]): DashboardStats {
     totalHours: Math.round(totalHours * 10) / 10,
     byProject,
     byStatus,
+    byPriority,
     byTag,
     weeklyVolume,
   };

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { STATUS_COLORS, PROJECT_COLORS, TAG_COLORS } from "@/lib/constants";
+import { STATUS_COLORS, PROJECT_COLORS, TAG_COLORS, PRIORITY_COLORS } from "@/lib/constants";
 import { Pencil, ArrowLeft, ExternalLink, FileText, Image } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -55,6 +55,11 @@ export default async function LogDetailPage({
             <Badge variant="secondary" className={STATUS_COLORS[log.status]}>
               {log.status}
             </Badge>
+            {log.priority && (
+              <Badge variant="secondary" className={PRIORITY_COLORS[log.priority]}>
+                {log.priority}
+              </Badge>
+            )}
             {log.tags.map((tag) => (
               <Badge key={tag} variant="secondary" className={TAG_COLORS[tag]}>
                 {tag}

@@ -15,13 +15,14 @@ export function CsvDownload({ logs }: { logs: WorkLog[] }) {
   if (logs.length === 0) return null;
 
   const handleDownload = () => {
-    const header = "날짜,제목,프로젝트,상태,태그,소요시간,업무내용";
+    const header = "날짜,제목,프로젝트,상태,우선순위,태그,소요시간,업무내용";
     const rows = logs.map((log) =>
       [
         log.date,
         escapeCsv(log.title),
         log.project,
         log.status,
+        log.priority || "",
         escapeCsv(log.tags.join("/")),
         log.hours !== null ? String(log.hours) : "",
         escapeCsv(log.content),

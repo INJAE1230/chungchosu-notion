@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     if (params.get("project")) filters.project = params.get("project") as WorkLogFilters["project"];
     if (params.get("status")) filters.status = params.get("status") as WorkLogFilters["status"];
     if (params.get("tags")) filters.tags = params.get("tags")!.split(",") as WorkLogFilters["tags"];
+    if (params.get("priority")) filters.priority = params.get("priority") as WorkLogFilters["priority"];
     if (params.get("search")) filters.search = params.get("search")!;
 
     const logs = await queryWorkLogs(
