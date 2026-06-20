@@ -7,6 +7,7 @@ import { useState } from "react";
 import {
   ClipboardList,
   ClipboardCheck,
+  Columns3,
   LayoutDashboard,
   Plus,
   Moon,
@@ -33,6 +34,7 @@ const NAV_ITEMS = [
   { href: "/logs/new", label: "업무 추가", icon: Plus },
   { href: "/templates", label: "반복 템플릿", icon: Repeat },
   { href: "/review", label: "주간 리뷰", icon: ClipboardCheck },
+  { href: "/board", label: "칸반 보드", icon: Columns3 },
   { href: "/calendar", label: "캘린더", icon: Calendar },
   { href: "/achievements", label: "성과 관리", icon: Trophy },
   { href: "/reports", label: "보고서", icon: FileText },
