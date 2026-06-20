@@ -4,6 +4,25 @@ import type { WorkLog, ReportType } from "./types";
 
 const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 
+function countWorkingDays(from: string, to: string): number {
+  let count = 0;
+  const start = parseISO(from);
+  const end = parseISO(to);
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 6) count++;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return count;
+}
+
+function isWeekend(dateStr: string): boolean {
+  const d = parseISO(dateStr);
+  const day = d.getDay();
+  return day === 0 || day === 6;
+}
+
 function formatDate(dateStr: string) {
   const d = parseISO(dateStr);
   return format(d, "yyyy-MM-dd (E)", { locale: ko });
@@ -85,18 +104,39 @@ export function generateReport(
     sections.push("");
   }
 
-  sections.push("─".repeat(40));
-  sections.push(`총 업무: ${logs.length}건`);
-  sections.push(`총 소요시간: ${Math.round(totalHours * 10) / 10}시간`);
-  sections.push(`완료율: ${completionRate}% (${completed.length}/${logs.length})`);
+  const weekendLogs = logs.filter((l) => l.date && isWeekend(l.date));
+  if (weekendLogs.length > 0) {
+    sections.push("■ 주말 업무");
+    weekendLogs.forEach((log, i) => sections.push(formatLogLine(log, i + 1)));
+    sections.push("");
+  }
 
-  if (type !== "daily") {
-    const projectCounts: Record<string, number> = {};
-    logs.forEach((l) => {
-      for (const proj of l.projects) {
-        projectCounts[proj] = (projectCounts[proj] || 0) + 1;
-      }
-    });
+  sections.push("─".repeat(40));
+
+  const workingDays = countWorkingDays(dateFrom, dateTo);
+  const totalDays = Math.max(1, Math.round((parseISO(dateTo).getTime() - parseISO(dateFrom).getTime()) / (1000 * 60 * 60 * 24)) + 1);
+
+  sections.push(`기간: ${totalDays}일 (근무일 ${workingDays}일)`);
+  sections.push(`총 업무: ${logs.length}건`);
+  if (workingDays > 0) {
+    sections.push(`근무일 일평균: ${Math.round((logs.length / workingDays) * 10) / 10}건`);
+  }
+  sections.push(`총 소요시간: ${Math.round(totalHours * 10) / 10}시간`);
+  if (workingDays > 0 && totalHours > 0) {
+    sections.push(`근무일 일평균: ${Math.round((totalHours / workingDays) * 10) / 10}시간`);
+  }
+  sections.push(`완료율: ${completionRate}% (${completed.length}/${logs.length})`);
+  if (weekendLogs.length > 0) {
+    sections.push(`주말 업무: ${weekendLogs.length}건`);
+  }
+
+  const projectCounts: Record<string, number> = {};
+  logs.forEach((l) => {
+    for (const proj of l.projects) {
+      projectCounts[proj] = (projectCounts[proj] || 0) + 1;
+    }
+  });
+  if (Object.keys(projectCounts).length > 0) {
     sections.push("");
     sections.push("■ 프로젝트별 현황");
     Object.entries(projectCounts).forEach(([project, count]) => {
