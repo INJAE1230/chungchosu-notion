@@ -188,7 +188,7 @@ function getMonthDate(dayOfMonth: number): string {
   const year = now.getFullYear();
   const month = now.getMonth();
   const lastDay = new Date(year, month + 1, 0).getDate();
-  const clampedDay = Math.min(dayOfMonth, lastDay);
+  const clampedDay = dayOfMonth === 0 ? lastDay : Math.min(dayOfMonth, lastDay);
   return formatDate(new Date(year, month, clampedDay));
 }
 

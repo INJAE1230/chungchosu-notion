@@ -32,7 +32,7 @@ function formatDay(template: RecurringTemplate): string {
       .map((d) => (DAY_OF_WEEK_LABELS[d] || `${d}`).replace("요일", ""))
       .join(", ");
   }
-  return template.dayValues.map((d) => `${d}일`).join(", ");
+  return template.dayValues.map((d) => d === 0 ? "말일" : `${d}일`).join(", ");
 }
 
 export function TemplateTable({

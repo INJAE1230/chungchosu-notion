@@ -212,6 +212,7 @@ export function TemplateFormDialog({
                         {d}일
                       </SelectItem>
                     ))}
+                    <SelectItem value="0">말일 (매월 마지막 날)</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -309,7 +310,9 @@ export function TemplateFormDialog({
             <div>
               <p className="text-sm font-medium">자동 생성</p>
               <p className="text-xs text-muted-foreground">
-                매주 월요일에 자동으로 업무를 생성합니다
+                {form.frequency === "매주"
+                  ? "매주 월요일에 해당 주 업무를 자동 생성합니다"
+                  : "매월 1일에 해당 월 업무를 자동 생성합니다"}
               </p>
             </div>
             <button
