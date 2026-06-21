@@ -42,7 +42,6 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedMd, setCopiedMd] = useState(false);
-  const [pdfLoading, setPdfLoading] = useState(false);
 
   const periodInfo = useMemo(() => {
     if (!dateFrom || !dateTo) return null;
@@ -155,100 +154,37 @@ export default function ReportsPage() {
     return sections;
   }
 
-  async function handleDownloadPdf() {
+  function handleDownloadPdf() {
     if (!report) return;
-    setPdfLoading(true);
-    try {
-      const { jsPDF } = await import("jspdf");
 
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = 190;
-      const pageHeight = 277;
-      const marginLeft = 10;
-      let y = 15;
+    const lines = report.content.split("\n");
+    const htmlLines = lines.map((line) => {
+      if (!line.trim()) return "<br/>";
+      if (line.startsWith("─")) return '<hr style="border:none;border-top:1px solid #ccc;margin:12px 0"/>';
+      if (lines.indexOf(line) === 0) return `<h2 style="font-size:16px;margin:0 0 8px">${line}</h2>`;
+      if (line.startsWith("■ ")) return `<h3 style="font-size:13px;margin:14px 0 4px;color:#333">${line.slice(2)}</h3>`;
+      if (line.startsWith("   ")) return `<p style="font-size:11px;color:#666;margin:2px 0 2px 20px">${line.trim()}</p>`;
+      if (/^\d+\.\s/.test(line)) return `<p style="font-size:12px;margin:3px 0 3px 10px">${line}</p>`;
+      if (line.startsWith("  - ")) return `<p style="font-size:11px;margin:2px 0 2px 16px">${line.trim()}</p>`;
+      return `<p style="font-size:12px;margin:3px 0">${line}</p>`;
+    });
 
-      const fontUrl = "https://cdn.jsdelivr.net/gh/niceplugin/font-storage/NanumGothic-Regular.ttf";
-      const fontBoldUrl = "https://cdn.jsdelivr.net/gh/niceplugin/font-storage/NanumGothic-Bold.ttf";
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+      <title>${report.title}</title>
+      <style>body{font-family:-apple-system,sans-serif;padding:40px;max-width:700px;margin:0 auto;color:#222}
+      @media print{body{padding:20px}}</style>
+    </head><body>${htmlLines.join("\n")}</body></html>`;
 
-      const [fontData, fontBoldData] = await Promise.all([
-        fetch(fontUrl).then((r) => r.arrayBuffer()),
-        fetch(fontBoldUrl).then((r) => r.arrayBuffer()),
-      ]);
-
-      const toBase64 = (buf: ArrayBuffer) => {
-        const bytes = new Uint8Array(buf);
-        let binary = "";
-        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-        return btoa(binary);
-      };
-
-      pdf.addFileToVFS("NanumGothic.ttf", toBase64(fontData));
-      pdf.addFont("NanumGothic.ttf", "NanumGothic", "normal");
-      pdf.addFileToVFS("NanumGothicBold.ttf", toBase64(fontBoldData));
-      pdf.addFont("NanumGothicBold.ttf", "NanumGothic", "bold");
-
-      pdf.setFont("NanumGothic", "normal");
-
-      function checkPage(needed: number) {
-        if (y + needed > pageHeight) {
-          pdf.addPage();
-          y = 15;
-        }
-      }
-
-      function writeText(text: string, size: number, bold = false, indent = 0) {
-        pdf.setFontSize(size);
-        pdf.setFont("NanumGothic", bold ? "bold" : "normal");
-        const lines = pdf.splitTextToSize(text, pageWidth - indent);
-        for (const line of lines) {
-          checkPage(size * 0.5);
-          pdf.text(line, marginLeft + indent, y);
-          y += size * 0.45;
-        }
-      }
-
-      const contentLines = report.content.split("\n");
-
-      for (const line of contentLines) {
-        if (!line.trim()) {
-          y += 3;
-          continue;
-        }
-
-        if (line.startsWith("─")) {
-          checkPage(5);
-          pdf.setDrawColor(180);
-          pdf.line(marginLeft, y, marginLeft + pageWidth, y);
-          y += 5;
-          continue;
-        }
-
-        if (contentLines.indexOf(line) === 0) {
-          writeText(line, 13, true);
-          y += 2;
-        } else if (line.startsWith("■ ")) {
-          y += 2;
-          writeText(line.slice(2), 11, true);
-          y += 1;
-        } else if (line.startsWith("   ")) {
-          writeText(line.trim(), 9, false, 8);
-        } else if (/^\d+\.\s/.test(line)) {
-          writeText(line, 10, false, 4);
-        } else if (line.startsWith("  - ")) {
-          writeText(line.trim(), 9, false, 6);
-        } else {
-          writeText(line, 10);
-        }
-      }
-
-      pdf.save(`${report.title.replace(/[\[\]]/g, "")}.pdf`);
-      toast.success("PDF가 다운로드되었습니다");
-    } catch (e) {
-      console.error("PDF generation error:", e);
-      toast.error("PDF 생성에 실패했습니다");
-    } finally {
-      setPdfLoading(false);
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.");
+      return;
     }
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.print();
+    };
   }
 
   function applyPreset(idx: number) {
@@ -381,8 +317,8 @@ export default function ReportsPage() {
                       <Download className="h-3.5 w-3.5 mr-1" />
                       TXT
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={pdfLoading}>
-                      {pdfLoading ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <FileDown className="h-3.5 w-3.5 mr-1" />}
+                    <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+                      <FileDown className="h-3.5 w-3.5 mr-1" />
                       PDF
                     </Button>
                   </div>
