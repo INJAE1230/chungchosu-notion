@@ -20,6 +20,7 @@ import {
   Repeat,
   Users,
   Building2,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +44,7 @@ const NAV_ITEMS = [
   { href: "/analytics", label: "통계 분석", icon: BarChart3 },
   { href: "/entities", label: "법인 통합", icon: Building2 },
   { href: "/hr", label: "인사/연차", icon: Users },
+  { href: "/payroll", label: "급여 관리", icon: Wallet },
 ];
 
 function NavContent({ onNavigate }: { onNavigate?: () => void }) {
