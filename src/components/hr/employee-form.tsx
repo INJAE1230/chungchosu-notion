@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Info } from "lucide-react";
 import { ENTITIES } from "@/lib/constants";
-import { POSITIONS, EMPLOYMENT_STATUSES } from "@/lib/hr-types";
+import { POSITIONS, EMPLOYMENT_STATUSES, WEEKDAYS } from "@/lib/hr-types";
 import type { EmployeeFormData } from "@/lib/hr-types";
 import type { Entity } from "@/lib/constants";
 
@@ -47,6 +47,7 @@ export function EmployeeForm({ initial, onSubmit, onCancel, submitLabel = "등�
     joinDate: defaultJoinDate,
     status: initial?.status || "재직",
     annualLeaveTotal: initial?.annualLeaveTotal ?? calcLegalLeave(defaultJoinDate),
+    restDays: initial?.restDays || [],
   });
   const [manualLeave, setManualLeave] = useState(!!initial);
   const [loading, setLoading] = useState(false);
@@ -180,6 +181,42 @@ export function EmployeeForm({ initial, onSubmit, onCancel, submitLabel = "등�
             </button>
           )}
         </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium">정휴무 요일</label>
+          {form.restDays.length > 0 && (
+            <span className="text-[11px] text-muted-foreground">주 {form.restDays.length}회</span>
+          )}
+        </div>
+        <div className="flex gap-1.5 mt-1.5">
+          {WEEKDAYS.map((day) => {
+            const selected = form.restDays.includes(day);
+            return (
+              <button
+                key={day}
+                type="button"
+                className={`w-9 h-9 rounded-md text-xs font-medium transition-colors ${
+                  selected
+                    ? "bg-teal-500 text-white"
+                    : "bg-accent hover:bg-accent/80 text-muted-foreground"
+                }`}
+                onClick={() => {
+                  setForm({
+                    ...form,
+                    restDays: selected
+                      ? form.restDays.filter((d) => d !== day)
+                      : [...form.restDays, day],
+                  });
+                }}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-1">매주 고정 휴무일을 선택하세요</p>
       </div>
 
       <div className="flex justify-end gap-2 pt-2">

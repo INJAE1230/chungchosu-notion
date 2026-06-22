@@ -23,6 +23,8 @@ import {
   UserX,
   Search,
   AlertTriangle,
+  List,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -33,6 +35,7 @@ import { calculateUsedLeave } from "@/lib/leave-utils";
 import type { Employee, AttendanceRecord, EmployeeFormData, AttendanceFormData, LeaveBalance } from "@/lib/hr-types";
 import { EmployeeForm } from "./employee-form";
 import { AttendanceForm } from "./attendance-form";
+import { AttendanceCalendar } from "./attendance-calendar";
 
 type Tab = "employees" | "attendance" | "leave";
 
@@ -50,6 +53,12 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
   const [showAttendanceForm, setShowAttendanceForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [attendanceView, setAttendanceView] = useState<"list" | "calendar">("calendar");
+  const [calendarFormDate, setCalendarFormDate] = useState<string | null>(null);
+  const [calendarFormEmployeeId, setCalendarFormEmployeeId] = useState<string | null>(null);
+  const [showBulkDialog, setShowBulkDialog] = useState(false);
+  const [bulkMonth, setBulkMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const activeEmployees = employees.filter((e) => e.status === "재직");
 
@@ -79,7 +88,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
   const summaryCards = [
     { title: "재직 인원", value: activeEmployees.length, icon: UserCheck, color: "text-green-500", suffix: "명" },
     { title: "퇴사", value: employees.length - activeEmployees.length, icon: UserX, color: "text-gray-400", suffix: "명" },
-    { title: "이번 달 근태", value: attendance.filter((a) => a.date.startsWith(new Date().toISOString().slice(0, 7))).length, icon: CalendarDays, color: "text-blue-500", suffix: "건" },
+    { title: "이번 달 휴무/예외", value: attendance.filter((a) => a.date.startsWith(new Date().toISOString().slice(0, 7))).length, icon: CalendarDays, color: "text-blue-500", suffix: "건" },
     { title: "평균 잔여연차", value: leaveBalances.length > 0 ? (leaveBalances.reduce((s, l) => s + l.remainingLeave, 0) / leaveBalances.length).toFixed(1) : "0", icon: Palmtree, color: "text-emerald-500", suffix: "일" },
   ];
 
@@ -145,6 +154,54 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
     toast.success(`${employeeName} ${data.category} 등록 완료`);
     setShowAttendanceForm(false);
     await refreshData();
+  };
+
+  const bulkPreview = useMemo(() => {
+    if (!showBulkDialog) return [];
+    const [y, m] = bulkMonth.split("-").map(Number);
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const existingSet = new Set(
+      attendance.map((a) => `${a.employeeId}_${a.date}`)
+    );
+    const dayIndexToLabel: Record<number, string> = { 0: "일", 1: "월", 2: "화", 3: "수", 4: "목", 5: "금", 6: "토" };
+    const records: { employeeId: string; employeeName: string; date: string; category: string }[] = [];
+
+    for (const emp of activeEmployees) {
+      if (emp.restDays.length === 0) continue;
+      const restSet = new Set(emp.restDays);
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dt = new Date(y, m - 1, d);
+        const dow = dt.getDay();
+        if (dow === 0 || dow === 6) continue;
+        const dayLabel = dayIndexToLabel[dow];
+        if (!restSet.has(dayLabel)) continue;
+        const dateStr = dt.toISOString().slice(0, 10);
+        if (existingSet.has(`${emp.id}_${dateStr}`)) continue;
+        records.push({ employeeId: emp.id, employeeName: emp.name, date: dateStr, category: "정휴무" });
+      }
+    }
+    return records;
+  }, [showBulkDialog, bulkMonth, activeEmployees, attendance]);
+
+  const handleBulkCreate = async () => {
+    if (bulkPreview.length === 0) return;
+    setBulkLoading(true);
+    try {
+      const res = await fetch("/api/hr/attendance/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ records: bulkPreview }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      toast.success(`정휴무 ${data.created}건 일괄 등록 완료`);
+      setShowBulkDialog(false);
+      await refreshData();
+    } catch {
+      toast.error("일괄 등록에 실패했습니다");
+    } finally {
+      setBulkLoading(false);
+    }
   };
 
   const handleDeleteAttendance = async (record: AttendanceRecord) => {
@@ -233,9 +290,32 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
           </Button>
         )}
         {tab === "attendance" && (
-          <Button size="sm" className="gap-1" onClick={() => setShowAttendanceForm(true)}>
-            <Plus className="h-3.5 w-3.5" /> 근태 등록
-          </Button>
+          <>
+            <div className="flex border rounded-md overflow-hidden">
+              <Button
+                variant={attendanceView === "calendar" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 rounded-none gap-1"
+                onClick={() => setAttendanceView("calendar")}
+              >
+                <Calendar className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant={attendanceView === "list" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 rounded-none gap-1"
+                onClick={() => setAttendanceView("list")}
+              >
+                <List className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowBulkDialog(true)}>
+              <CalendarDays className="h-3.5 w-3.5" /> 월간 정휴무
+            </Button>
+            <Button size="sm" className="gap-1" onClick={() => setShowAttendanceForm(true)}>
+              <Plus className="h-3.5 w-3.5" /> 근태 등록
+            </Button>
+          </>
         )}
       </div>
 
@@ -265,6 +345,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
                         {emp.department && <span>· {emp.department}</span>}
                         {emp.joinDate && <span>· 입사 {emp.joinDate}</span>}
                         <span>· 연차 {emp.remainingLeave}/{emp.annualLeaveTotal}일</span>
+                        {emp.restDays.length > 0 && <span>· 휴무 {emp.restDays.join("·")}</span>}
                       </div>
                     </div>
                     <div className="flex gap-1.5 shrink-0">
@@ -284,7 +365,27 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
       )}
 
       {/* === Attendance Tab === */}
-      {tab === "attendance" && (
+      {tab === "attendance" && attendanceView === "calendar" && (
+        <Card>
+          <CardContent className="p-4">
+            <AttendanceCalendar
+              employees={employees}
+              attendance={attendance}
+              onAddClick={(date, employeeId) => {
+                setCalendarFormDate(date);
+                setCalendarFormEmployeeId(employeeId);
+              }}
+              onDeleteClick={(record) => {
+                if (confirm(`${getEmployeeName(record.employeeId)} ${record.date} ${record.category} 기록을 삭제할까요?`)) {
+                  handleDeleteAttendance(record);
+                }
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {tab === "attendance" && attendanceView === "list" && (
         <Card>
           <CardContent className="p-0">
             {filteredAttendance.length === 0 ? (
@@ -415,6 +516,80 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>근태 등록</DialogTitle></DialogHeader>
           <AttendanceForm employees={employees} onSubmit={handleCreateAttendance} onCancel={() => setShowAttendanceForm(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!calendarFormDate} onOpenChange={(open) => { if (!open) { setCalendarFormDate(null); setCalendarFormEmployeeId(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>근태 등록 — {calendarFormDate}</DialogTitle></DialogHeader>
+          {calendarFormDate && calendarFormEmployeeId && (
+            <AttendanceForm
+              employees={employees}
+              initialEmployeeId={calendarFormEmployeeId}
+              initialDate={calendarFormDate}
+              onSubmit={async (data, empName) => {
+                await handleCreateAttendance(data, empName);
+                setCalendarFormDate(null);
+                setCalendarFormEmployeeId(null);
+              }}
+              onCancel={() => { setCalendarFormDate(null); setCalendarFormEmployeeId(null); }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>월간 정휴무 일괄 등록</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-medium">대상 월</label>
+              <Input
+                type="month"
+                value={bulkMonth}
+                onChange={(e) => setBulkMonth(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            <div className="text-sm">
+              {bulkPreview.length === 0 ? (
+                <p className="text-muted-foreground">
+                  {activeEmployees.some((e) => e.restDays.length > 0)
+                    ? "이미 모든 정휴무가 등록되어 있거나 해당 월에 등록할 내용이 없습니다."
+                    : "정휴무 요일이 설정된 직원이 없습니다. 직원 정보에서 정휴무 요일을 먼저 설정해주세요."}
+                </p>
+              ) : (
+                <>
+                  <p className="font-medium mb-2">
+                    {bulkPreview.length}건 생성 예정
+                  </p>
+                  <div className="max-h-48 overflow-y-auto space-y-1 text-xs text-muted-foreground">
+                    {[...new Set(bulkPreview.map((r) => r.employeeName))].map((name) => {
+                      const count = bulkPreview.filter((r) => r.employeeName === name).length;
+                      return (
+                        <div key={name} className="flex justify-between">
+                          <span>{name}</span>
+                          <span>{count}건</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowBulkDialog(false)}>
+                취소
+              </Button>
+              <Button
+                size="sm"
+                disabled={bulkPreview.length === 0 || bulkLoading}
+                onClick={handleBulkCreate}
+              >
+                {bulkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : `${bulkPreview.length}건 등록`}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

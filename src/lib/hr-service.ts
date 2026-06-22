@@ -52,8 +52,11 @@ function mapEmployee(page: NotionPage): Employee {
   const statusObj = p["재직상태"]?.select as { name: string } | null | undefined;
   const leaveTotal = p["연차발생일수"]?.number as number | null | undefined;
   const leaveRemain = p["잔여연차"]?.number as number | null | undefined;
+  const restDaysText = p["정휴무요일"]?.rich_text as { plain_text: string }[] | undefined;
 
   const entityName = entityObj?.name;
+  const restDaysStr = restDaysText?.[0]?.plain_text || "";
+  const restDays = restDaysStr ? restDaysStr.split(",").map((s) => s.trim()).filter(Boolean) : [];
 
   return {
     id: page.id,
@@ -65,6 +68,7 @@ function mapEmployee(page: NotionPage): Employee {
     status: (statusObj?.name as EmploymentStatus) || "재직",
     annualLeaveTotal: leaveTotal ?? 15,
     remainingLeave: leaveRemain ?? 0,
+    restDays,
   };
 }
 
@@ -127,6 +131,7 @@ export async function createEmployee(data: EmployeeFormData): Promise<string> {
   if (data.entity) properties["법인"] = { select: { name: data.entity } };
   if (data.department) properties["부서"] = { rich_text: [{ text: { content: data.department } }] };
   if (data.position) properties["직급"] = { select: { name: data.position } };
+  if (data.restDays?.length) properties["정휴무요일"] = { rich_text: [{ text: { content: data.restDays.join(",") } }] };
 
   const page = await notion.pages.create({
     parent: { database_id: employeeDbId },
@@ -145,6 +150,7 @@ export async function updateEmployee(id: string, data: Partial<EmployeeFormData>
   if (data.joinDate !== undefined) properties["입사일"] = { date: { start: data.joinDate } };
   if (data.status !== undefined) properties["재직상태"] = { select: { name: data.status } };
   if (data.annualLeaveTotal !== undefined) properties["연차발생일수"] = { number: data.annualLeaveTotal };
+  if (data.restDays !== undefined) properties["정휴무요일"] = { rich_text: [{ text: { content: data.restDays.join(",") } }] };
 
   await notion.pages.update({
     page_id: id,
@@ -216,6 +222,30 @@ export async function deleteAttendance(id: string): Promise<void> {
     page_id: id,
     in_trash: true,
   } as Parameters<typeof notion.pages.update>[0]);
+}
+
+// ── Bulk attendance creation ──
+
+export async function createAttendanceBulk(
+  records: { employeeId: string; employeeName: string; date: string; category: string }[]
+): Promise<number> {
+  let created = 0;
+  for (const rec of records) {
+    const title = `${rec.employeeName} - ${rec.category}`;
+    const properties: Record<string, unknown> = {
+      "제목": { title: [{ text: { content: title } }] },
+      "직원": { relation: [{ id: rec.employeeId }] },
+      "날짜": { date: { start: rec.date } },
+      "구분": { select: { name: rec.category } },
+      "비고": { rich_text: [{ text: { content: "" } }] },
+    };
+    await notion.pages.create({
+      parent: { database_id: attendanceDbId },
+      properties,
+    } as Parameters<typeof notion.pages.create>[0]);
+    created++;
+  }
+  return created;
 }
 
 // ── Leave recalculation ──

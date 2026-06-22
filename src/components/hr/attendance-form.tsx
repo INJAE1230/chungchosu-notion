@@ -11,14 +11,16 @@ interface AttendanceFormProps {
   employees: Employee[];
   onSubmit: (data: AttendanceFormData, employeeName: string) => Promise<void>;
   onCancel: () => void;
+  initialEmployeeId?: string;
+  initialDate?: string;
 }
 
-export function AttendanceForm({ employees, onSubmit, onCancel }: AttendanceFormProps) {
+export function AttendanceForm({ employees, onSubmit, onCancel, initialEmployeeId, initialDate }: AttendanceFormProps) {
   const activeEmployees = employees.filter((e) => e.status === "재직");
 
   const [form, setForm] = useState<AttendanceFormData>({
-    employeeId: activeEmployees[0]?.id || "",
-    date: new Date().toISOString().slice(0, 10),
+    employeeId: initialEmployeeId || activeEmployees[0]?.id || "",
+    date: initialDate || new Date().toISOString().slice(0, 10),
     category: "연차",
     note: "",
     deductionMethod: undefined,
