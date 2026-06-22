@@ -25,6 +25,8 @@ import {
   AlertTriangle,
   List,
   Calendar,
+  Upload,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -59,6 +61,10 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
   const [showBulkDialog, setShowBulkDialog] = useState(false);
   const [bulkMonth, setBulkMonth] = useState(new Date().toISOString().slice(0, 7));
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [exportMonth, setExportMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const activeEmployees = employees.filter((e) => e.status === "재직");
 
@@ -204,6 +210,48 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
     }
   };
 
+  const handleImportExcel = async (file: File) => {
+    setImportLoading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/hr/attendance/import", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      let msg = `${data.created}건 등록 완료`;
+      if (data.skippedDuplicate > 0) msg += ` (중복 ${data.skippedDuplicate}건 스킵)`;
+      if (data.unmatchedNames?.length > 0) msg += `\n매칭 실패: ${data.unmatchedNames.join(", ")}`;
+      toast.success(msg);
+      await refreshData();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "엑셀 가져오기 실패");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExportLoading(true);
+    try {
+      const res = await fetch(`/api/hr/attendance/export?month=${exportMonth}`);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const [y, m] = exportMonth.split("-");
+      a.download = `${y}년 ${parseInt(m)}월 근태현황.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setShowExportDialog(false);
+      toast.success("엑셀 다운로드 완료");
+    } catch {
+      toast.error("엑셀 내보내기 실패");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const handleDeleteAttendance = async (record: AttendanceRecord) => {
     setDeletingId(record.id);
     try {
@@ -311,6 +359,28 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
             </div>
             <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowBulkDialog(true)}>
               <CalendarDays className="h-3.5 w-3.5" /> 월간 정휴무
+            </Button>
+            <label className="inline-flex">
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImportExcel(f);
+                  e.target.value = "";
+                }}
+                disabled={importLoading}
+              />
+              <Button size="sm" variant="outline" className="gap-1 cursor-pointer" asChild disabled={importLoading}>
+                <span>
+                  {importLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                  가져오기
+                </span>
+              </Button>
+            </label>
+            <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowExportDialog(true)}>
+              <Download className="h-3.5 w-3.5" /> 내보내기
             </Button>
             <Button size="sm" className="gap-1" onClick={() => setShowAttendanceForm(true)}>
               <Plus className="h-3.5 w-3.5" /> 근태 등록
@@ -587,6 +657,24 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
                 onClick={handleBulkCreate}
               >
                 {bulkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : `${bulkPreview.length}건 등록`}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>근태 현황 엑셀 내보내기</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-medium">대상 월</label>
+              <Input type="month" value={exportMonth} onChange={(e) => setExportMonth(e.target.value)} className="h-9" />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowExportDialog(false)}>취소</Button>
+              <Button size="sm" className="gap-1" onClick={handleExportExcel} disabled={exportLoading}>
+                {exportLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="h-3.5 w-3.5" /> 다운로드</>}
               </Button>
             </div>
           </div>
