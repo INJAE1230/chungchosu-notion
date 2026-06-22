@@ -56,7 +56,9 @@ function mapEmployee(page: NotionPage): Employee {
 
   const entityName = entityObj?.name;
   const restDaysStr = restDaysText?.[0]?.plain_text || "";
-  const restDays = restDaysStr ? restDaysStr.split(",").map((s) => s.trim()).filter(Boolean) : [];
+  const restDays = restDaysStr
+    ? restDaysStr.split(/[,\s·\/]+/).map((s) => s.trim().replace(/요일$/, "")).filter(Boolean)
+    : [];
 
   return {
     id: page.id,
