@@ -40,7 +40,9 @@ function TaskItem({ log }: { log: WorkLog }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm truncate">{log.title}</p>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-[11px] text-muted-foreground">{log.date}</span>
+          <span className="text-[11px] text-muted-foreground">
+            {log.date} ({["일","월","화","수","목","금","토"][new Date(log.date + "T00:00:00").getDay()]})
+          </span>
           {log.projects.map((proj) => (
             <Badge key={proj} variant="secondary" className={`text-[10px] ${PROJECT_COLORS[proj]}`}>
               {proj}
