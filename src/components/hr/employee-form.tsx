@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { PROJECTS } from "@/lib/constants";
+import { ENTITIES } from "@/lib/constants";
 import { POSITIONS, EMPLOYMENT_STATUSES } from "@/lib/hr-types";
 import type { EmployeeFormData } from "@/lib/hr-types";
-import type { Project } from "@/lib/types";
+import type { Entity } from "@/lib/constants";
 
 interface EmployeeFormProps {
   initial?: Partial<EmployeeFormData>;
@@ -20,24 +20,14 @@ interface EmployeeFormProps {
 export function EmployeeForm({ initial, onSubmit, onCancel, submitLabel = "등록" }: EmployeeFormProps) {
   const [form, setForm] = useState<EmployeeFormData>({
     name: initial?.name || "",
-    projects: initial?.projects || [],
+    entity: initial?.entity || null,
+    department: initial?.department || "",
     position: initial?.position || null,
     joinDate: initial?.joinDate || new Date().toISOString().slice(0, 10),
-    phone: initial?.phone || "",
-    annualLeave: initial?.annualLeave ?? 15,
     status: initial?.status || "재직",
-    memo: initial?.memo || "",
+    annualLeaveTotal: initial?.annualLeaveTotal ?? 15,
   });
   const [loading, setLoading] = useState(false);
-
-  const toggleProject = (p: Project) => {
-    setForm((prev) => ({
-      ...prev,
-      projects: prev.projects.includes(p)
-        ? prev.projects.filter((x) => x !== p)
-        : [...prev.projects, p],
-    }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,22 +53,28 @@ export function EmployeeForm({ initial, onSubmit, onCancel, submitLabel = "등�
       </div>
 
       <div>
-        <label className="text-xs font-medium">사업장</label>
-        <div className="flex flex-wrap gap-1.5 mt-1.5">
-          {PROJECTS.filter((p) => p !== "개인일정").map((p) => (
-            <Badge
-              key={p}
-              variant={form.projects.includes(p) ? "default" : "outline"}
-              className="cursor-pointer text-xs"
-              onClick={() => toggleProject(p)}
-            >
-              {p}
-            </Badge>
+        <label className="text-xs font-medium">법인</label>
+        <select
+          className="w-full h-9 rounded-md border bg-background px-3 text-sm"
+          value={form.entity || ""}
+          onChange={(e) => setForm({ ...form, entity: (e.target.value || null) as Entity | null })}
+        >
+          <option value="">선택 안함</option>
+          {ENTITIES.map((e) => (
+            <option key={e} value={e}>{e}</option>
           ))}
-        </div>
+        </select>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs font-medium">부서</label>
+          <Input
+            value={form.department}
+            onChange={(e) => setForm({ ...form, department: e.target.value })}
+            placeholder="부서명"
+          />
+        </div>
         <div>
           <label className="text-xs font-medium">직급</label>
           <select
@@ -92,6 +88,9 @@ export function EmployeeForm({ initial, onSubmit, onCancel, submitLabel = "등�
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-xs font-medium">재직상태</label>
           <select
@@ -104,9 +103,6 @@ export function EmployeeForm({ initial, onSubmit, onCancel, submitLabel = "등�
             ))}
           </select>
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-xs font-medium">입사일</label>
           <Input
@@ -115,33 +111,16 @@ export function EmployeeForm({ initial, onSubmit, onCancel, submitLabel = "등�
             onChange={(e) => setForm({ ...form, joinDate: e.target.value })}
           />
         </div>
-        <div>
-          <label className="text-xs font-medium">연차일수</label>
-          <Input
-            type="number"
-            min={0}
-            step={0.5}
-            value={form.annualLeave}
-            onChange={(e) => setForm({ ...form, annualLeave: parseFloat(e.target.value) || 0 })}
-          />
-        </div>
       </div>
 
       <div>
-        <label className="text-xs font-medium">연락처</label>
+        <label className="text-xs font-medium">연차발생일수</label>
         <Input
-          value={form.phone}
-          onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          placeholder="010-0000-0000"
-        />
-      </div>
-
-      <div>
-        <label className="text-xs font-medium">메모</label>
-        <Input
-          value={form.memo}
-          onChange={(e) => setForm({ ...form, memo: e.target.value })}
-          placeholder="비고"
+          type="number"
+          min={0}
+          step={0.5}
+          value={form.annualLeaveTotal}
+          onChange={(e) => setForm({ ...form, annualLeaveTotal: parseFloat(e.target.value) || 0 })}
         />
       </div>
 

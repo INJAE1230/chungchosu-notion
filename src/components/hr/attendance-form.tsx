@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { ATTENDANCE_TYPES, ATTENDANCE_DEDUCT_DAYS } from "@/lib/hr-types";
-import type { AttendanceFormData, AttendanceType } from "@/lib/hr-types";
-import type { Employee } from "@/lib/hr-types";
+import { ATTENDANCE_CATEGORIES } from "@/lib/hr-types";
+import type { AttendanceFormData, AttendanceCategory, DeductionMethod, Employee } from "@/lib/hr-types";
 
 interface AttendanceFormProps {
   employees: Employee[];
-  onSubmit: (data: AttendanceFormData) => Promise<void>;
+  onSubmit: (data: AttendanceFormData, employeeName: string) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -18,36 +17,31 @@ export function AttendanceForm({ employees, onSubmit, onCancel }: AttendanceForm
   const activeEmployees = employees.filter((e) => e.status === "재직");
 
   const [form, setForm] = useState<AttendanceFormData>({
-    employeeName: activeEmployees[0]?.name || "",
+    employeeId: activeEmployees[0]?.id || "",
     date: new Date().toISOString().slice(0, 10),
-    type: "연차",
-    reason: "",
-    deductDays: ATTENDANCE_DEDUCT_DAYS["연차"],
-    projects: activeEmployees[0]?.projects || [],
+    category: "연차",
+    note: "",
+    deductionMethod: undefined,
   });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const emp = activeEmployees.find((e) => e.name === form.employeeName);
-    if (emp) {
-      setForm((prev) => ({ ...prev, projects: emp.projects }));
-    }
-  }, [form.employeeName]);
+  const selectedEmployee = activeEmployees.find((e) => e.id === form.employeeId);
 
-  const handleTypeChange = (type: AttendanceType) => {
+  const handleCategoryChange = (category: AttendanceCategory) => {
     setForm((prev) => ({
       ...prev,
-      type,
-      deductDays: ATTENDANCE_DEDUCT_DAYS[type],
+      category,
+      deductionMethod: category === "조퇴" ? "연차" : undefined,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.employeeName) return;
+    if (!form.employeeId) return;
+    const empName = selectedEmployee?.name || "";
     setLoading(true);
     try {
-      await onSubmit(form);
+      await onSubmit(form, empName);
     } finally {
       setLoading(false);
     }
@@ -59,14 +53,14 @@ export function AttendanceForm({ employees, onSubmit, onCancel }: AttendanceForm
         <label className="text-xs font-medium">직원 *</label>
         <select
           className="w-full h-9 rounded-md border bg-background px-3 text-sm"
-          value={form.employeeName}
-          onChange={(e) => setForm({ ...form, employeeName: e.target.value })}
+          value={form.employeeId}
+          onChange={(e) => setForm({ ...form, employeeId: e.target.value })}
           required
         >
           <option value="">선택</option>
           {activeEmployees.map((e) => (
-            <option key={e.id} value={e.name}>
-              {e.name} {e.position ? `(${e.position})` : ""} — {e.projects.join(", ") || "미배정"}
+            <option key={e.id} value={e.id}>
+              {e.name} {e.position ? `(${e.position})` : ""} — {e.entity || "미배정"}
             </option>
           ))}
         </select>
@@ -83,44 +77,58 @@ export function AttendanceForm({ employees, onSubmit, onCancel }: AttendanceForm
           />
         </div>
         <div>
-          <label className="text-xs font-medium">근태유형 *</label>
+          <label className="text-xs font-medium">구분 *</label>
           <select
             className="w-full h-9 rounded-md border bg-background px-3 text-sm"
-            value={form.type}
-            onChange={(e) => handleTypeChange(e.target.value as AttendanceType)}
+            value={form.category}
+            onChange={(e) => handleCategoryChange(e.target.value as AttendanceCategory)}
           >
-            {ATTENDANCE_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
+            {ATTENDANCE_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
             ))}
           </select>
         </div>
       </div>
 
+      {form.category === "조퇴" && (
+        <div>
+          <label className="text-xs font-medium">차감방식 *</label>
+          <select
+            className="w-full h-9 rounded-md border bg-background px-3 text-sm"
+            value={form.deductionMethod || "연차"}
+            onChange={(e) => setForm({ ...form, deductionMethod: e.target.value as DeductionMethod })}
+          >
+            <option value="연차">연차 차감 (8시간 단위)</option>
+            <option value="정휴무">정휴무 차감 (11시간 단위)</option>
+          </select>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            {form.deductionMethod === "정휴무"
+              ? "정휴무에서 차감 — 연차는 차감되지 않음"
+              : "연차에서 0.5일 차감 (반차 전환) + 급여차감대상"}
+          </p>
+        </div>
+      )}
+
       <div>
-        <label className="text-xs font-medium">차감일수</label>
+        <label className="text-xs font-medium">비고</label>
         <Input
-          type="number"
-          min={0}
-          step={0.5}
-          value={form.deductDays}
-          onChange={(e) => setForm({ ...form, deductDays: parseFloat(e.target.value) || 0 })}
+          value={form.note}
+          onChange={(e) => setForm({ ...form, note: e.target.value })}
+          placeholder="비고 입력"
         />
       </div>
 
-      <div>
-        <label className="text-xs font-medium">사유</label>
-        <Input
-          value={form.reason}
-          onChange={(e) => setForm({ ...form, reason: e.target.value })}
-          placeholder="사유 입력"
-        />
-      </div>
+      {selectedEmployee && (
+        <div className="text-xs text-muted-foreground bg-accent/50 rounded-md px-3 py-2">
+          잔여연차: <span className="font-semibold">{selectedEmployee.remainingLeave}일</span> / {selectedEmployee.annualLeaveTotal}일
+        </div>
+      )}
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
           취소
         </Button>
-        <Button type="submit" size="sm" disabled={loading || !form.employeeName}>
+        <Button type="submit" size="sm" disabled={loading || !form.employeeId}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "등록"}
         </Button>
       </div>

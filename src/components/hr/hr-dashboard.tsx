@@ -22,14 +22,14 @@ import {
   UserCheck,
   UserX,
   Search,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PROJECT_COLORS } from "@/lib/constants";
 import {
   EMPLOYMENT_STATUS_COLORS,
-  ATTENDANCE_TYPE_COLORS,
-  ATTENDANCE_DEDUCT_DAYS,
+  ATTENDANCE_CATEGORY_COLORS,
 } from "@/lib/hr-types";
+import { calculateUsedLeave } from "@/lib/leave-utils";
 import type { Employee, AttendanceRecord, EmployeeFormData, AttendanceFormData, LeaveBalance } from "@/lib/hr-types";
 import { EmployeeForm } from "./employee-form";
 import { AttendanceForm } from "./attendance-form";
@@ -53,29 +53,34 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
 
   const activeEmployees = employees.filter((e) => e.status === "재직");
 
+  const employeeMap = useMemo(() => {
+    const map = new Map<string, Employee>();
+    employees.forEach((e) => map.set(e.id, e));
+    return map;
+  }, [employees]);
+
+  const getEmployeeName = (id: string | null) => {
+    if (!id) return "—";
+    return employeeMap.get(id)?.name || "알 수 없음";
+  };
+
   const leaveBalances = useMemo<LeaveBalance[]>(() => {
-    return employees
-      .filter((e) => e.status === "재직")
-      .map((emp) => {
-        const used = attendance
-          .filter((a) => a.employeeName === emp.name)
-          .reduce((sum, a) => sum + a.deductDays, 0);
-        return {
-          employeeName: emp.name,
-          totalLeave: emp.annualLeave,
-          usedLeave: used,
-          remainingLeave: emp.annualLeave - used,
-          projects: emp.projects,
-          position: emp.position,
-        };
-      });
-  }, [employees, attendance]);
+    return activeEmployees.map((emp) => {
+      const empRecords = attendance.filter((a) => a.employeeId === emp.id);
+      const used = calculateUsedLeave(empRecords);
+      return {
+        employee: emp,
+        usedLeave: used,
+        remainingLeave: emp.annualLeaveTotal - used,
+      };
+    });
+  }, [activeEmployees, attendance]);
 
   const summaryCards = [
     { title: "재직 인원", value: activeEmployees.length, icon: UserCheck, color: "text-green-500", suffix: "명" },
-    { title: "퇴직/휴직", value: employees.length - activeEmployees.length, icon: UserX, color: "text-gray-400", suffix: "명" },
+    { title: "퇴사", value: employees.length - activeEmployees.length, icon: UserX, color: "text-gray-400", suffix: "명" },
     { title: "이번 달 근태", value: attendance.filter((a) => a.date.startsWith(new Date().toISOString().slice(0, 7))).length, icon: CalendarDays, color: "text-blue-500", suffix: "건" },
-    { title: "평균 잔여 연차", value: leaveBalances.length > 0 ? (leaveBalances.reduce((s, l) => s + l.remainingLeave, 0) / leaveBalances.length).toFixed(1) : "0", icon: Palmtree, color: "text-emerald-500", suffix: "일" },
+    { title: "평균 잔여연차", value: leaveBalances.length > 0 ? (leaveBalances.reduce((s, l) => s + l.remainingLeave, 0) / leaveBalances.length).toFixed(1) : "0", icon: Palmtree, color: "text-emerald-500", suffix: "일" },
   ];
 
   async function refreshData() {
@@ -130,14 +135,14 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
     }
   };
 
-  const handleCreateAttendance = async (data: AttendanceFormData) => {
+  const handleCreateAttendance = async (data: AttendanceFormData, employeeName: string) => {
     const res = await fetch("/api/hr/attendance", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ formData: data, employeeName }),
     });
     if (!res.ok) throw new Error();
-    toast.success(`${data.employeeName} ${data.type} 등록 완료`);
+    toast.success(`${employeeName} ${data.category} 등록 완료`);
     setShowAttendanceForm(false);
     await refreshData();
   };
@@ -157,12 +162,14 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
   };
 
   const filteredEmployees = employees.filter((e) =>
-    !search || e.name.includes(search) || e.projects.some((p) => p.includes(search))
+    !search || e.name.includes(search) || (e.entity && e.entity.includes(search)) || e.department.includes(search)
   );
 
-  const filteredAttendance = attendance.filter((a) =>
-    !search || a.employeeName.includes(search) || a.type.includes(search)
-  );
+  const filteredAttendance = attendance.filter((a) => {
+    if (!search) return true;
+    const empName = getEmployeeName(a.employeeId);
+    return empName.includes(search) || a.category.includes(search);
+  });
 
   const tabs = [
     { key: "employees" as Tab, label: "직원 관리", icon: Users },
@@ -180,7 +187,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
         <p className="text-sm text-muted-foreground">직원 정보와 근태를 관리하세요</p>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {summaryCards.map((card) => (
           <Card key={card.title} className="border-0 bg-accent/40">
@@ -218,12 +225,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="검색..."
-            className="pl-8 h-9"
-          />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="검색..." className="pl-8 h-9" />
         </div>
         {tab === "employees" && (
           <Button size="sm" className="gap-1" onClick={() => setShowEmployeeForm(true)}>
@@ -237,7 +239,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
         )}
       </div>
 
-      {/* Tab Content */}
+      {/* === Employees Tab === */}
       {tab === "employees" && (
         <Card>
           <CardContent className="p-0">
@@ -253,45 +255,23 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{emp.name}</span>
-                        {emp.position && (
-                          <span className="text-xs text-muted-foreground">{emp.position}</span>
-                        )}
+                        {emp.position && <span className="text-xs text-muted-foreground">{emp.position}</span>}
                         <Badge variant="secondary" className={`text-[10px] ${EMPLOYMENT_STATUS_COLORS[emp.status]}`}>
                           {emp.status}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        {emp.projects.map((p) => (
-                          <Badge key={p} variant="secondary" className={`text-[10px] ${PROJECT_COLORS[p]}`}>
-                            {p}
-                          </Badge>
-                        ))}
-                        {emp.joinDate && (
-                          <span className="text-[11px] text-muted-foreground ml-1">
-                            입사 {emp.joinDate}
-                          </span>
-                        )}
-                        <span className="text-[11px] text-muted-foreground">
-                          · 연차 {emp.annualLeave}일
-                        </span>
+                      <div className="flex items-center gap-1.5 mt-1 text-[11px] text-muted-foreground">
+                        {emp.entity && <span>{emp.entity}</span>}
+                        {emp.department && <span>· {emp.department}</span>}
+                        {emp.joinDate && <span>· 입사 {emp.joinDate}</span>}
+                        <span>· 연차 {emp.remainingLeave}/{emp.annualLeaveTotal}일</span>
                       </div>
                     </div>
                     <div className="flex gap-1.5 shrink-0">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => setEditingEmployee(emp)}
-                      >
+                      <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setEditingEmployee(emp)}>
                         <Pencil className="h-3 w-3" /> 수정
                       </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => handleDeleteEmployee(emp)}
-                        disabled={deletingId === emp.id}
-                      >
+                      <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => handleDeleteEmployee(emp)} disabled={deletingId === emp.id}>
                         {deletingId === emp.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                       </Button>
                     </div>
@@ -303,6 +283,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
         </Card>
       )}
 
+      {/* === Attendance Tab === */}
       {tab === "attendance" && (
         <Card>
           <CardContent className="p-0">
@@ -317,30 +298,29 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
                   <div key={record.id} className="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{record.employeeName}</span>
-                        <Badge variant="secondary" className={`text-[10px] ${ATTENDANCE_TYPE_COLORS[record.type]}`}>
-                          {record.type}
+                        <span className="text-sm font-medium">{getEmployeeName(record.employeeId)}</span>
+                        <Badge variant="secondary" className={`text-[10px] ${ATTENDANCE_CATEGORY_COLORS[record.category]}`}>
+                          {record.category}
                         </Badge>
-                        {record.deductDays > 0 && (
-                          <span className="text-[11px] text-muted-foreground">-{record.deductDays}일</span>
+                        {record.category === "조퇴" && record.deductionMethod && (
+                          <Badge variant="outline" className="text-[10px]">
+                            {record.deductionMethod}차감
+                          </Badge>
+                        )}
+                        {record.category === "조퇴" && (
+                          <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-600 dark:text-amber-400">
+                            급여차감대상
+                          </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-[11px] text-muted-foreground">
+                      <div className="flex items-center gap-1.5 mt-1 text-[11px] text-muted-foreground">
+                        <span>
                           {record.date} ({["일","월","화","수","목","금","토"][new Date(record.date + "T00:00:00").getDay()]})
                         </span>
-                        {record.reason && (
-                          <span className="text-[11px] text-muted-foreground">· {record.reason}</span>
-                        )}
+                        {record.note && <span>· {record.note.replace(/^\[(연차|정휴무)차감\]\s*/, "")}</span>}
                       </div>
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="h-7 text-xs shrink-0"
-                      onClick={() => handleDeleteAttendance(record)}
-                      disabled={deletingId === record.id}
-                    >
+                    <Button variant="destructive" size="sm" className="h-7 text-xs shrink-0" onClick={() => handleDeleteAttendance(record)} disabled={deletingId === record.id}>
                       {deletingId === record.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                     </Button>
                   </div>
@@ -351,6 +331,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
         </Card>
       )}
 
+      {/* === Leave Tab === */}
       {tab === "leave" && (
         <div className="space-y-4">
           {leaveBalances.length === 0 ? (
@@ -368,27 +349,24 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
               <CardContent className="p-0">
                 <div className="divide-y">
                   {leaveBalances.map((lb) => {
-                    const ratio = lb.totalLeave > 0 ? (lb.usedLeave / lb.totalLeave) * 100 : 0;
+                    const ratio = lb.employee.annualLeaveTotal > 0 ? (lb.usedLeave / lb.employee.annualLeaveTotal) * 100 : 0;
                     const isLow = lb.remainingLeave <= 3;
                     return (
-                      <div key={lb.employeeName} className="px-4 py-3">
+                      <div key={lb.employee.id} className="px-4 py-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{lb.employeeName}</span>
-                            {lb.position && (
-                              <span className="text-xs text-muted-foreground">{lb.position}</span>
+                            <span className="text-sm font-medium">{lb.employee.name}</span>
+                            {lb.employee.position && <span className="text-xs text-muted-foreground">{lb.employee.position}</span>}
+                            {lb.employee.entity && (
+                              <span className="text-xs text-muted-foreground">· {lb.employee.entity}</span>
                             )}
-                            {lb.projects.map((p) => (
-                              <Badge key={p} variant="secondary" className={`text-[10px] ${PROJECT_COLORS[p]}`}>
-                                {p}
-                              </Badge>
-                            ))}
+                            {isLow && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
                           </div>
                           <div className="text-right">
                             <span className={`text-lg font-bold ${isLow ? "text-red-500" : "text-foreground"}`}>
                               {lb.remainingLeave}
                             </span>
-                            <span className="text-xs text-muted-foreground"> / {lb.totalLeave}일</span>
+                            <span className="text-xs text-muted-foreground"> / {lb.employee.annualLeaveTotal}일</span>
                           </div>
                         </div>
                         <div className="mt-2 h-2 rounded-full bg-accent overflow-hidden">
@@ -411,25 +389,17 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
         </div>
       )}
 
-      {/* Employee Form Dialog */}
+      {/* Dialogs */}
       <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>직원 등록</DialogTitle>
-          </DialogHeader>
-          <EmployeeForm
-            onSubmit={handleCreateEmployee}
-            onCancel={() => setShowEmployeeForm(false)}
-          />
+          <DialogHeader><DialogTitle>직원 등록</DialogTitle></DialogHeader>
+          <EmployeeForm onSubmit={handleCreateEmployee} onCancel={() => setShowEmployeeForm(false)} />
         </DialogContent>
       </Dialog>
 
-      {/* Employee Edit Dialog */}
       <Dialog open={!!editingEmployee} onOpenChange={(open) => !open && setEditingEmployee(null)}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>직원 정보 수정</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>직원 정보 수정</DialogTitle></DialogHeader>
           {editingEmployee && (
             <EmployeeForm
               initial={editingEmployee}
@@ -441,17 +411,10 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
         </DialogContent>
       </Dialog>
 
-      {/* Attendance Form Dialog */}
       <Dialog open={showAttendanceForm} onOpenChange={setShowAttendanceForm}>
         <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>근태 등록</DialogTitle>
-          </DialogHeader>
-          <AttendanceForm
-            employees={employees}
-            onSubmit={handleCreateAttendance}
-            onCancel={() => setShowAttendanceForm(false)}
-          />
+          <DialogHeader><DialogTitle>근태 등록</DialogTitle></DialogHeader>
+          <AttendanceForm employees={employees} onSubmit={handleCreateAttendance} onCancel={() => setShowAttendanceForm(false)} />
         </DialogContent>
       </Dialog>
     </div>

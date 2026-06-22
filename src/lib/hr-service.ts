@@ -1,5 +1,6 @@
 import { notion } from "./notion";
-import type { Project } from "./types";
+import { ENTITIES } from "./constants";
+import type { Entity } from "./constants";
 import type {
   Employee,
   EmployeeFormData,
@@ -7,8 +8,9 @@ import type {
   AttendanceFormData,
   EmploymentStatus,
   Position,
-  AttendanceType,
+  AttendanceCategory,
 } from "./hr-types";
+import { parseDeductionMethod, encodeDeductionMethod, calculateRemainingLeave } from "./leave-utils";
 
 const employeeDbId = process.env.NOTION_HR_EMPLOYEE_DB_ID!;
 const attendanceDbId = process.env.NOTION_HR_ATTENDANCE_DB_ID!;
@@ -37,56 +39,55 @@ interface NotionPage {
   properties: Record<string, unknown>;
 }
 
-const VALID_PROJECTS = new Set(["청초수", "씨푸드", "JS코퍼", "JKK", "646미터퍼세크", "아일랜드", "청초수(신관)", "에그롤린대전", "개인일정"]);
-
-function mapProjects(items: { name: string }[] | undefined | null): Project[] {
-  if (!items || items.length === 0) return [];
-  return items.map((i) => i.name).filter((n) => VALID_PROJECTS.has(n)) as Project[];
-}
+const VALID_ENTITIES = new Set(ENTITIES);
 
 function mapEmployee(page: NotionPage): Employee {
   const p = page.properties as Record<string, Record<string, unknown>>;
 
   const titleArr = p["이름"]?.title as { plain_text: string }[] | undefined;
-  const projectMulti = p["사업장"]?.multi_select as { name: string }[] | undefined;
+  const entityObj = p["법인"]?.select as { name: string } | null | undefined;
+  const deptText = p["부서"]?.rich_text as { plain_text: string }[] | undefined;
   const positionObj = p["직급"]?.select as { name: string } | null | undefined;
   const dateObj = p["입사일"]?.date as { start: string } | null | undefined;
-  const phoneText = p["연락처"]?.rich_text as { plain_text: string }[] | undefined;
-  const leaveNum = p["연차일수"]?.number as number | null | undefined;
   const statusObj = p["재직상태"]?.select as { name: string } | null | undefined;
-  const memoText = p["메모"]?.rich_text as { plain_text: string }[] | undefined;
+  const leaveTotal = p["연차발생일수"]?.number as number | null | undefined;
+  const leaveRemain = p["잔여연차"]?.number as number | null | undefined;
+
+  const entityName = entityObj?.name;
 
   return {
     id: page.id,
     name: titleArr?.[0]?.plain_text || "",
-    projects: mapProjects(projectMulti),
+    entity: (entityName && VALID_ENTITIES.has(entityName as Entity)) ? entityName as Entity : null,
+    department: deptText?.[0]?.plain_text || "",
     position: (positionObj?.name as Position) || null,
     joinDate: dateObj?.start || "",
-    phone: phoneText?.[0]?.plain_text || "",
-    annualLeave: leaveNum ?? 15,
     status: (statusObj?.name as EmploymentStatus) || "재직",
-    memo: memoText?.[0]?.plain_text || "",
+    annualLeaveTotal: leaveTotal ?? 15,
+    remainingLeave: leaveRemain ?? 0,
   };
 }
 
 function mapAttendance(page: NotionPage): AttendanceRecord {
   const p = page.properties as Record<string, Record<string, unknown>>;
 
-  const empText = p["직원명"]?.rich_text as { plain_text: string }[] | undefined;
+  const titleArr = p["제목"]?.title as { plain_text: string }[] | undefined;
+  const empRelation = p["직원"]?.relation as { id: string }[] | undefined;
   const dateObj = p["날짜"]?.date as { start: string } | null | undefined;
-  const typeObj = p["근태유형"]?.select as { name: string } | null | undefined;
-  const reasonText = p["사유"]?.rich_text as { plain_text: string }[] | undefined;
-  const deductNum = p["차감일수"]?.number as number | null | undefined;
-  const projectMulti = p["사업장"]?.multi_select as { name: string }[] | undefined;
+  const categoryObj = p["구분"]?.select as { name: string } | null | undefined;
+  const noteText = p["비고"]?.rich_text as { plain_text: string }[] | undefined;
+
+  const note = noteText?.[0]?.plain_text || "";
+  const category = (categoryObj?.name as AttendanceCategory) || "정상근무";
 
   return {
     id: page.id,
-    employeeName: empText?.[0]?.plain_text || "",
+    title: titleArr?.[0]?.plain_text || "",
+    employeeId: empRelation?.[0]?.id || null,
     date: dateObj?.start || "",
-    type: (typeObj?.name as AttendanceType) || "연차",
-    reason: reasonText?.[0]?.plain_text || "",
-    deductDays: deductNum ?? 0,
-    projects: mapProjects(projectMulti),
+    category,
+    note,
+    deductionMethod: category === "조퇴" ? parseDeductionMethod(note) : undefined,
   };
 }
 
@@ -117,17 +118,15 @@ export async function getAllEmployees(): Promise<Employee[]> {
 export async function createEmployee(data: EmployeeFormData): Promise<string> {
   const properties: Record<string, unknown> = {
     "이름": { title: [{ text: { content: data.name } }] },
-    "사업장": { multi_select: data.projects.map((p) => ({ name: p })) },
     "입사일": { date: { start: data.joinDate } },
-    "연락처": { rich_text: [{ text: { content: data.phone || "" } }] },
-    "연차일수": { number: data.annualLeave },
     "재직상태": { select: { name: data.status } },
-    "메모": { rich_text: [{ text: { content: data.memo || "" } }] },
+    "연차발생일수": { number: data.annualLeaveTotal },
+    "잔여연차": { number: data.annualLeaveTotal },
   };
 
-  if (data.position) {
-    properties["직급"] = { select: { name: data.position } };
-  }
+  if (data.entity) properties["법인"] = { select: { name: data.entity } };
+  if (data.department) properties["부서"] = { rich_text: [{ text: { content: data.department } }] };
+  if (data.position) properties["직급"] = { select: { name: data.position } };
 
   const page = await notion.pages.create({
     parent: { database_id: employeeDbId },
@@ -140,17 +139,23 @@ export async function updateEmployee(id: string, data: Partial<EmployeeFormData>
   const properties: Record<string, unknown> = {};
 
   if (data.name !== undefined) properties["이름"] = { title: [{ text: { content: data.name } }] };
-  if (data.projects !== undefined) properties["사업장"] = { multi_select: data.projects.map((p) => ({ name: p })) };
+  if (data.entity !== undefined) properties["법인"] = data.entity ? { select: { name: data.entity } } : { select: null };
+  if (data.department !== undefined) properties["부서"] = { rich_text: [{ text: { content: data.department } }] };
   if (data.position !== undefined) properties["직급"] = data.position ? { select: { name: data.position } } : { select: null };
   if (data.joinDate !== undefined) properties["입사일"] = { date: { start: data.joinDate } };
-  if (data.phone !== undefined) properties["연락처"] = { rich_text: [{ text: { content: data.phone } }] };
-  if (data.annualLeave !== undefined) properties["연차일수"] = { number: data.annualLeave };
   if (data.status !== undefined) properties["재직상태"] = { select: { name: data.status } };
-  if (data.memo !== undefined) properties["메모"] = { rich_text: [{ text: { content: data.memo } }] };
+  if (data.annualLeaveTotal !== undefined) properties["연차발생일수"] = { number: data.annualLeaveTotal };
 
   await notion.pages.update({
     page_id: id,
     properties,
+  } as Parameters<typeof notion.pages.update>[0]);
+}
+
+export async function patchRemainingLeave(employeeId: string, remainingLeave: number): Promise<void> {
+  await notion.pages.update({
+    page_id: employeeId,
+    properties: { "잔여연차": { number: remainingLeave } },
   } as Parameters<typeof notion.pages.update>[0]);
 }
 
@@ -185,16 +190,18 @@ export async function getAllAttendance(): Promise<AttendanceRecord[]> {
   return allResults.map(mapAttendance);
 }
 
-export async function createAttendance(data: AttendanceFormData): Promise<string> {
-  const title = `${data.employeeName} - ${data.type}`;
+export async function createAttendance(data: AttendanceFormData, employeeName: string): Promise<string> {
+  const title = `${employeeName} - ${data.category}`;
+  const note = data.category === "조퇴" && data.deductionMethod
+    ? encodeDeductionMethod(data.deductionMethod, data.note)
+    : data.note;
+
   const properties: Record<string, unknown> = {
     "제목": { title: [{ text: { content: title } }] },
-    "직원명": { rich_text: [{ text: { content: data.employeeName } }] },
+    "직원": { relation: [{ id: data.employeeId }] },
     "날짜": { date: { start: data.date } },
-    "근태유형": { select: { name: data.type } },
-    "사유": { rich_text: [{ text: { content: data.reason || "" } }] },
-    "차감일수": { number: data.deductDays },
-    "사업장": { multi_select: data.projects.map((p) => ({ name: p })) },
+    "구분": { select: { name: data.category } },
+    "비고": { rich_text: [{ text: { content: note || "" } }] },
   };
 
   const page = await notion.pages.create({
@@ -209,4 +216,22 @@ export async function deleteAttendance(id: string): Promise<void> {
     page_id: id,
     in_trash: true,
   } as Parameters<typeof notion.pages.update>[0]);
+}
+
+// ── Leave recalculation ──
+
+export async function recalculateLeave(employeeId: string): Promise<number> {
+  const [employees, allAttendance] = await Promise.all([
+    getAllEmployees(),
+    getAllAttendance(),
+  ]);
+
+  const emp = employees.find((e) => e.id === employeeId);
+  if (!emp) throw new Error("직원을 찾을 수 없습니다");
+
+  const empRecords = allAttendance.filter((a) => a.employeeId === employeeId);
+  const remaining = calculateRemainingLeave(emp.annualLeaveTotal, empRecords);
+
+  await patchRemainingLeave(employeeId, remaining);
+  return remaining;
 }

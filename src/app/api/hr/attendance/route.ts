@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAllAttendance, createAttendance } from "@/lib/hr-service";
+import { getAllAttendance, createAttendance, recalculateLeave } from "@/lib/hr-service";
 
 export async function GET() {
   try {
@@ -13,8 +13,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
-    const id = await createAttendance(data);
+    const { formData, employeeName } = await request.json();
+    const id = await createAttendance(formData, employeeName);
+    await recalculateLeave(formData.employeeId);
     return NextResponse.json({ id }, { status: 201 });
   } catch (error) {
     console.error("근태 기록 실패:", error);
