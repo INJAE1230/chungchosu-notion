@@ -109,12 +109,32 @@ export function WeeklyReview({ allLogs: initialLogs }: WeeklyReviewProps) {
   }
 
   const handleAction = async (id: string, status: Status, message: string) => {
+    const prevStatus = logs.find((l) => l.id === id)?.status;
     setLoadingId(id);
     try {
       await updateStatus(id, status);
       setLogs((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
       setProcessedIds((prev) => new Set(prev).add(id));
-      toast.success(message);
+      toast.success(message, {
+        action: {
+          label: "되돌리기",
+          onClick: async () => {
+            if (!prevStatus) return;
+            try {
+              await updateStatus(id, prevStatus);
+              setLogs((prev) => prev.map((l) => l.id === id ? { ...l, status: prevStatus } : l));
+              setProcessedIds((prev) => {
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+              });
+              toast.success("되돌렸습니다");
+            } catch {
+              toast.error("되돌리기에 실패했습니다");
+            }
+          },
+        },
+      });
     } catch {
       toast.error("상태 변경에 실패했습니다");
     } finally {
