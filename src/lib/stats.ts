@@ -1,7 +1,8 @@
 import { startOfWeek, format } from "date-fns";
 import { ko } from "date-fns/locale";
 import type { WorkLog, DashboardStats, Project, Status, Priority, Tag } from "./types";
-import { PROJECTS, STATUSES, PRIORITIES, TAGS } from "./constants";
+import { PROJECTS, STATUSES, PRIORITIES, TAGS, PROJECT_TO_ENTITY, ENTITIES } from "./constants";
+import type { Entity } from "./constants";
 
 export function computeStats(logs: WorkLog[]): DashboardStats {
   const byProject = Object.fromEntries(
@@ -54,4 +55,49 @@ export function computeStats(logs: WorkLog[]): DashboardStats {
     byTag,
     weeklyVolume,
   };
+}
+
+export interface EntityStats {
+  entity: Entity;
+  projects: Project[];
+  totalLogs: number;
+  completedLogs: number;
+  inProgressLogs: number;
+  completionRate: number;
+  totalHours: number;
+  thisMonthLogs: number;
+}
+
+export function getEntityStats(logs: WorkLog[]): EntityStats[] {
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  const entityProjectMap = new Map<string, Set<Project>>();
+  for (const [proj, entity] of Object.entries(PROJECT_TO_ENTITY)) {
+    if (!entity) continue;
+    if (!entityProjectMap.has(entity)) entityProjectMap.set(entity, new Set());
+    entityProjectMap.get(entity)!.add(proj as Project);
+  }
+
+  return ENTITIES.map((entity) => {
+    const projects = Array.from(entityProjectMap.get(entity) || []);
+    const entityLogs = logs.filter((log) =>
+      log.projects.some((p) => projects.includes(p))
+    );
+    const completed = entityLogs.filter((l) => l.status === "완료").length;
+    const inProgress = entityLogs.filter((l) => l.status === "진행 중" || l.status === "다음행동").length;
+    const thisMonthLogs = entityLogs.filter((l) => l.date.startsWith(thisMonth)).length;
+    const totalHours = entityLogs.reduce((s, l) => s + (l.hours || 0), 0);
+
+    return {
+      entity,
+      projects,
+      totalLogs: entityLogs.length,
+      completedLogs: completed,
+      inProgressLogs: inProgress,
+      completionRate: entityLogs.length > 0 ? Math.round((completed / entityLogs.length) * 100) : 0,
+      totalHours: Math.round(totalHours * 10) / 10,
+      thisMonthLogs,
+    };
+  });
 }

@@ -7,7 +7,7 @@ const workLogSchema = z.object({
     z.object({
       title: z.string().describe("업무 제목 (간결하게)"),
       date: z.string().describe("날짜 (YYYY-MM-DD 형식)"),
-      projects: z.array(z.enum(["청초수", "씨푸드", "JS코퍼", "JKK", "646코퍼", "아일랜드", "청초수(신관)", "에이전트", "에그롤린대전", "개인일정"])).describe("관련 사업장 (다중 선택 가능)"),
+      projects: z.array(z.enum(["청초수", "씨푸드", "JS코퍼", "JKK", "646미터퍼세크", "아일랜드", "청초수(신관)", "에그롤린대전", "개인일정"])).describe("관련 사업장 (다중 선택 가능)"),
       status: z.enum(["예정", "다음행동", "대기중", "언젠가", "진행 중", "완료"]).describe("진행 상태 (GTD)"),
       priority: z.enum(["긴급+중요", "중요", "긴급", "낮음"]).nullable().describe("우선순위 (아이젠하워)"),
       content: z.string().describe("업무 상세 내용"),
@@ -167,10 +167,9 @@ export async function parseMemoText(text: string, today: string) {
 - "씨푸드": 씨푸드 관련 업무
 - "JS코퍼": JS코퍼 관련 업무
 - "JKK": JKK 관련 업무
-- "646코퍼": 646코퍼 관련 업무
+- "646미터퍼세크": 646미터퍼세크 관련 업무
 - "아일랜드": 아일랜드 관련 업무
 - "청초수(신관)": 청초수 신관 관련 업무
-- "에이전트": 에이전트 관련 업무
 - "에그롤린대전": 에그롤린대전 관련 업무
 - 위에 해당 안 되는 모든 업무 → "청초수"
 

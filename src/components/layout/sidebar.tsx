@@ -19,6 +19,7 @@ import {
   Calendar,
   Repeat,
   Users,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +41,7 @@ const NAV_ITEMS = [
   { href: "/achievements", label: "성과 관리", icon: Trophy },
   { href: "/reports", label: "보고서", icon: FileText },
   { href: "/analytics", label: "통계 분석", icon: BarChart3 },
+  { href: "/entities", label: "법인 통합", icon: Building2 },
   { href: "/hr", label: "인사/연차", icon: Users },
 ];
 

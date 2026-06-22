@@ -1,6 +1,32 @@
 import type { Frequency, PresetCategory, Priority, Project, Status, Tag, AchievementRating, InputSource } from "./types";
 
-export const PROJECTS: Project[] = ["청초수", "씨푸드", "JS코퍼", "JKK", "646코퍼", "아일랜드", "청초수(신관)", "에이전트", "에그롤린대전", "개인일정"];
+export const PROJECTS: Project[] = ["청초수", "씨푸드", "JS코퍼", "JKK", "646미터퍼세크", "아일랜드", "청초수(신관)", "에그롤린대전", "개인일정"];
+
+export const PROJECT_TO_ENTITY: Record<Project, string | null> = {
+  "청초수": "청초수",
+  "청초수(신관)": "청초수",
+  "씨푸드": "청초수씨푸드",
+  "646미터퍼세크": "646미터퍼세크",
+  "아일랜드": "아일랜드프로젝트646미터퍼세크",
+  "JS코퍼": "JS코퍼레이션",
+  "JKK": "JKK인터내셔널",
+  "에그롤린대전": "에그롤린대전",
+  "개인일정": null,
+};
+
+export const ENTITIES = [
+  "청초수",
+  "청초수씨푸드",
+  "646미터퍼세크",
+  "아일랜드프로젝트646미터퍼세크",
+  "JS코퍼레이션",
+  "JKK인터내셔널",
+  "에그롤린대전",
+  "바비캐럿",
+  "이니셜뮤직코리아",
+] as const;
+
+export type Entity = (typeof ENTITIES)[number];
 export const STATUSES: Status[] = ["다음행동", "진행 중", "대기중", "예정", "언젠가", "완료"];
 export const PRIORITIES: Priority[] = ["긴급+중요", "중요", "긴급", "낮음"];
 export const TAGS: Tag[] = ["회의", "개발", "기획", "리뷰", "버그"];
@@ -35,10 +61,9 @@ export const PROJECT_COLORS: Record<Project, string> = {
   "씨푸드": "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300",
   "JS코퍼": "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
   "JKK": "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
-  "646코퍼": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  "646미터퍼세크": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   "아일랜드": "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
   "청초수(신관)": "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300",
-  "에이전트": "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300",
   "에그롤린대전": "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
   "개인일정": "bg-slate-100 text-slate-600 dark:bg-slate-800/30 dark:text-slate-400",
 };

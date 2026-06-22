@@ -37,7 +37,7 @@ interface NotionPage {
   properties: Record<string, unknown>;
 }
 
-const VALID_PROJECTS = new Set(["청초수", "씨푸드", "JS코퍼", "JKK", "646코퍼", "아일랜드", "청초수(신관)", "에이전트", "에그롤린대전", "개인일정"]);
+const VALID_PROJECTS = new Set(["청초수", "씨푸드", "JS코퍼", "JKK", "646미터퍼세크", "아일랜드", "청초수(신관)", "에그롤린대전", "개인일정"]);
 
 function mapProjects(items: { name: string }[] | undefined | null): Project[] {
   if (!items || items.length === 0) return [];
