@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Paperclip, X, Loader2, FileText, Image, ScanSearch } from "lucide-react";
+import { Paperclip, X, Loader2, FileText, ScanSearch, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { FileAttachment } from "@/lib/types";
@@ -22,11 +22,6 @@ interface FileUploadProps {
   maxFiles?: number;
 }
 
-function FileIcon({ type }: { type?: string }) {
-  if (type?.startsWith("image/")) return <Image className="h-4 w-4 text-blue-500" />;
-  return <FileText className="h-4 w-4 text-orange-500" />;
-}
-
 function formatSize(bytes?: number) {
   if (!bytes) return "";
   if (bytes < 1024) return `${bytes}B`;
@@ -34,10 +29,19 @@ function formatSize(bytes?: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
 
-export function FileUpload({ attachments, onChange, onOcrResult, maxFiles = 5 }: FileUploadProps) {
+function isImage(file: FileAttachment) {
+  return file.type?.startsWith("image/");
+}
+
+export function FileUpload({ attachments, onChange, onOcrResult, maxFiles = 20 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
+  const [uploadingNames, setUploadingNames] = useState<string[]>([]);
   const [ocrLoading, setOcrLoading] = useState<number | null>(null);
+  const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const images = attachments.filter(isImage);
+  const nonImages = attachments.filter((f) => !isImage(f));
 
   async function handleOcr(index: number) {
     const file = attachments[index];
@@ -60,105 +64,151 @@ export function FileUpload({ attachments, onChange, onOcrResult, maxFiles = 5 }:
     }
   }
 
-  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
+  async function uploadFiles(files: File[]) {
     const remaining = maxFiles - attachments.length;
     if (remaining <= 0) {
       toast.error(`최대 ${maxFiles}개까지 첨부할 수 있습니다.`);
       return;
     }
 
-    const filesToUpload = Array.from(files).slice(0, remaining);
+    const filesToUpload = files.slice(0, remaining);
+    if (files.length > remaining) {
+      toast.warning(`${remaining}개만 업로드됩니다 (최대 ${maxFiles}개)`);
+    }
+
     setUploading(true);
+    setUploadingNames(filesToUpload.map((f) => f.name));
 
     try {
-      const uploaded: FileAttachment[] = [];
-      for (const file of filesToUpload) {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        uploaded.push(data);
-      }
-      onChange([...attachments, ...uploaded]);
-      toast.success(`${uploaded.length}개 파일 업로드 완료`);
+      const results = await Promise.all(
+        filesToUpload.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || `${file.name} 업로드 실패`);
+          return data as FileAttachment;
+        })
+      );
+      onChange([...attachments, ...results]);
+      toast.success(`${results.length}개 파일 업로드 완료`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "업로드 실패");
     } finally {
       setUploading(false);
+      setUploadingNames([]);
       if (inputRef.current) inputRef.current.value = "";
     }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    uploadFiles(Array.from(files));
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) uploadFiles(files);
   }
 
   function removeFile(index: number) {
     onChange(attachments.filter((_, i) => i !== index));
   }
 
+  const globalIdx = (imgIdx: number) => attachments.indexOf(images[imgIdx]);
+  const nonImageGlobalIdx = (idx: number) => attachments.indexOf(nonImages[idx]);
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center gap-2">
         <label className="text-sm font-medium">첨부파일</label>
-        <span className="text-xs text-muted-foreground">
-          ({attachments.length}/{maxFiles})
-        </span>
+        <span className="text-xs text-muted-foreground">({attachments.length}/{maxFiles})</span>
       </div>
 
-      {attachments.length > 0 && (
-        <div className="space-y-1.5">
-          {attachments.map((file, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
-            >
-              <FileIcon type={file.type} />
-              <a
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 truncate hover:text-blue-600 hover:underline"
-              >
-                {file.name}
-              </a>
-              {file.size && (
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {formatSize(file.size)}
-                </span>
-              )}
-              {onOcrResult && file.type?.startsWith("image/") && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 shrink-0 text-muted-foreground hover:text-blue-500"
-                  onClick={() => handleOcr(idx)}
-                  disabled={ocrLoading === idx}
-                  title="AI 영수증 인식"
-                >
-                  {ocrLoading === idx ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <ScanSearch className="h-3.5 w-3.5" />
+      {/* Image thumbnails */}
+      {images.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+          {images.map((file, imgIdx) => {
+            const gi = globalIdx(imgIdx);
+            return (
+              <div key={imgIdx} className="group relative aspect-square rounded-lg overflow-hidden border bg-accent/30">
+                <a href={file.url} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={file.url}
+                    alt={file.name}
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
+                </a>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {onOcrResult && (
+                    <button
+                      type="button"
+                      onClick={() => handleOcr(gi)}
+                      disabled={ocrLoading === gi}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 shadow hover:bg-white transition-colors"
+                      title="AI 영수증 인식"
+                    >
+                      {ocrLoading === gi ? (
+                        <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+                      ) : (
+                        <ScanSearch className="h-3 w-3 text-blue-500" />
+                      )}
+                    </button>
                   )}
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-red-500"
-                onClick={() => removeFile(idx)}
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          ))}
+                  <button
+                    type="button"
+                    onClick={() => removeFile(gi)}
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90 shadow hover:bg-red-50 transition-colors"
+                  >
+                    <X className="h-3 w-3 text-red-500" />
+                  </button>
+                </div>
+                <p className="absolute bottom-0 left-0 right-0 truncate bg-black/40 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  {file.name}
+                </p>
+              </div>
+            );
+          })}
         </div>
       )}
 
+      {/* Non-image file list */}
+      {nonImages.length > 0 && (
+        <div className="space-y-1.5">
+          {nonImages.map((file, idx) => {
+            const gi = nonImageGlobalIdx(idx);
+            return (
+              <div key={idx} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
+                <FileText className="h-4 w-4 shrink-0 text-orange-500" />
+                <a
+                  href={file.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 truncate hover:text-blue-600 hover:underline"
+                >
+                  {file.name}
+                </a>
+                {file.size && (
+                  <span className="shrink-0 text-xs text-muted-foreground">{formatSize(file.size)}</span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removeFile(gi)}
+                  className="shrink-0 text-muted-foreground hover:text-red-500 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Upload area */}
       {attachments.length < maxFiles && (
         <div>
           <input
@@ -169,23 +219,41 @@ export function FileUpload({ attachments, onChange, onOcrResult, maxFiles = 5 }:
             className="hidden"
             onChange={handleFileSelect}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+            onClick={() => !uploading && inputRef.current?.click()}
+            className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-5 transition-all ${
+              dragging
+                ? "border-violet-400 bg-violet-50 dark:bg-violet-950/20"
+                : "border-border hover:border-violet-300 hover:bg-accent/30"
+            } ${uploading ? "cursor-not-allowed opacity-60" : ""}`}
           >
             {uploading ? (
-              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+              <>
+                <Loader2 className="h-5 w-5 animate-spin text-violet-500" />
+                <p className="text-xs text-muted-foreground">
+                  업로드 중... ({uploadingNames.length}개)
+                </p>
+                <div className="flex flex-wrap gap-1 justify-center max-w-xs">
+                  {uploadingNames.map((name, i) => (
+                    <span key={i} className="text-[10px] text-muted-foreground truncate max-w-[120px]">{name}</span>
+                  ))}
+                </div>
+              </>
             ) : (
-              <Paperclip className="mr-1 h-3.5 w-3.5" />
+              <>
+                <Upload className={`h-5 w-5 transition-colors ${dragging ? "text-violet-500" : "text-muted-foreground"}`} />
+                <div className="text-center">
+                  <p className="text-xs font-medium">클릭하거나 파일을 끌어다 놓으세요</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    이미지, PDF, Excel, Word · 파일당 최대 10MB · 최대 {maxFiles}개
+                  </p>
+                </div>
+              </>
             )}
-            {uploading ? "업로드 중..." : "파일 첨부"}
-          </Button>
-          <p className="mt-1 text-xs text-muted-foreground">
-            이미지, PDF, Excel, Word (최대 10MB)
-          </p>
+          </div>
         </div>
       )}
     </div>
