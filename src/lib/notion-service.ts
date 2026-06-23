@@ -31,6 +31,7 @@ function mapPageToWorkLog(page: NotionPage): WorkLog {
   const originalTextArr = p["입력원본"]?.rich_text as { plain_text: string }[] | undefined;
   const priorityObj = p["우선순위"]?.select as { name: string } | null | undefined;
   const filesArr = p["첨부파일"]?.files as { name: string; type: string; external?: { url: string }; file?: { url: string } }[] | undefined;
+  const trackRelation = p["트랙"]?.relation as { id: string }[] | undefined;
 
   const attachments: FileAttachment[] = (filesArr || []).map((f) => ({
     name: f.name,
@@ -53,6 +54,7 @@ function mapPageToWorkLog(page: NotionPage): WorkLog {
     inputSource: (sourceObj?.name as InputSource) || null,
     originalText: originalTextArr?.[0]?.plain_text || null,
     attachments,
+    trackId: trackRelation?.[0]?.id || null,
   };
 }
 
@@ -198,6 +200,9 @@ export async function createWorkLog(data: WorkLogFormData, meta?: { inputSource?
   if (data.rating) {
     properties["성과등급"] = { select: { name: data.rating } };
   }
+  if (data.trackId) {
+    properties["트랙"] = { relation: [{ id: data.trackId }] };
+  }
 
   if (data.attachments && data.attachments.length > 0) {
     properties["첨부파일"] = {
@@ -291,6 +296,11 @@ export async function updateWorkLog(
         external: { url: a.url },
       })),
     };
+  }
+  if (data.trackId !== undefined) {
+    optionalProperties["트랙"] = data.trackId
+      ? { relation: [{ id: data.trackId }] }
+      : { relation: [] };
   }
 
   try {

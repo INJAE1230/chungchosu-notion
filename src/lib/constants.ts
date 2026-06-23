@@ -1,4 +1,4 @@
-import type { Frequency, PresetCategory, Priority, Project, Status, Tag, AchievementRating, InputSource } from "./types";
+import type { Frequency, PresetCategory, Priority, Project, Status, Tag, AchievementRating, InputSource, TrackStatus } from "./types";
 
 export const PROJECTS: Project[] = ["청초수", "씨푸드", "JS코퍼", "JKK", "646미터퍼세크", "아일랜드", "청초수(신관)", "에그롤린대전", "개인일정"];
 
@@ -74,6 +74,15 @@ export const TAG_COLORS: Record<Tag, string> = {
   "기획": "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
   "리뷰": "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300",
   "버그": "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+};
+
+export const TRACK_STATUSES: TrackStatus[] = ["계획", "진행중", "완료", "보류"];
+
+export const TRACK_STATUS_COLORS: Record<TrackStatus, string> = {
+  "계획": "bg-slate-100 text-slate-600 dark:bg-slate-800/30 dark:text-slate-400",
+  "진행중": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  "완료": "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  "보류": "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
 };
 
 export const FREQUENCIES: Frequency[] = ["매주", "매월", "매분기"];

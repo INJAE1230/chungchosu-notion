@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { PROJECTS, STATUSES, PRIORITIES, TAGS, TAG_COLORS, PRIORITY_COLORS, PROJECT_COLORS, ACHIEVEMENT_RATINGS } from "@/lib/constants";
 import { FileUpload } from "@/components/file-upload";
 import type { OcrResult } from "@/components/file-upload";
-import type { WorkLog, WorkLogFormData, Tag, Priority, AchievementRating, Project } from "@/lib/types";
+import type { WorkLog, WorkLogFormData, Tag, Priority, AchievementRating, Project, Track } from "@/lib/types";
 
 function getToday() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().split("T")[0];
@@ -40,9 +40,15 @@ export function LogForm({ log, initialDate }: { log?: WorkLog; initialDate?: str
     outcome: log?.outcome || null,
     rating: log?.rating || null,
     attachments: log?.attachments || [],
+    trackId: log?.trackId || null,
   });
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState(false);
+  const [tracks, setTracks] = useState<Track[]>([]);
+
+  useEffect(() => {
+    fetch("/api/tracks").then((r) => r.json()).then(setTracks).catch(() => {});
+  }, []);
 
   function handleOcrResult(result: OcrResult) {
     const updates: Partial<WorkLogFormData> = {};
@@ -262,6 +268,29 @@ export function LogForm({ log, initialDate }: { log?: WorkLog; initialDate?: str
           />
         </div>
       </div>
+
+      {tracks.length > 0 && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">트랙 연결</label>
+          <Select
+            value={form.trackId || "none"}
+            onValueChange={(v) => setForm({ ...form, trackId: v === "none" ? null : v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="트랙 선택 (선택사항)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">없음</SelectItem>
+              {tracks.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.title}
+                  {t.entity ? ` (${t.entity})` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <FileUpload
         attachments={form.attachments || []}

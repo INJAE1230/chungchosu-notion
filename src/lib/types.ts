@@ -1,3 +1,24 @@
+export type TrackStatus = "계획" | "진행중" | "완료" | "보류";
+
+export interface Track {
+  id: string;
+  title: string;
+  entity: string | null;
+  startDate: string | null;
+  targetDate: string | null;
+  status: TrackStatus;
+  description: string | null;
+}
+
+export interface TrackFormData {
+  title: string;
+  entity: string | null;
+  startDate: string | null;
+  targetDate: string | null;
+  status: TrackStatus;
+  description: string | null;
+}
+
 export type Frequency = "매주" | "매월" | "매분기";
 export type PresetCategory = "정기 보고" | "정산/회계" | "회의" | "관리 업무";
 export type Project = "청초수" | "씨푸드" | "JS코퍼" | "JKK" | "646미터퍼세크" | "아일랜드" | "청초수(신관)" | "에그롤린대전" | "개인일정";
@@ -30,6 +51,7 @@ export interface WorkLog {
   inputSource: InputSource | null;
   originalText: string | null;
   attachments: FileAttachment[];
+  trackId: string | null;
 }
 
 export interface WorkLogFilters {
@@ -57,6 +79,7 @@ export interface WorkLogFormData {
   rating?: AchievementRating | null;
   attachments?: FileAttachment[];
   appendTo?: string | null;
+  trackId?: string | null;
 }
 
 export interface DashboardStats {
