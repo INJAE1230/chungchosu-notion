@@ -552,103 +552,6 @@ export function EntityGrid({ entityStats: rawStats, allLogs }: EntityGridProps) 
         ))}
       </div>
 
-      {/* Comparison charts */}
-      {compareData.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-violet-500" />
-                법인 간 비교
-              </CardTitle>
-              <div className="flex items-center gap-1 bg-accent/50 rounded-lg p-0.5">
-                <button
-                  onClick={() => setCompareView("bar")}
-                  className={`text-xs px-2.5 py-1 rounded-md transition-all ${compareView === "bar" ? "bg-background shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  막대
-                </button>
-                <button
-                  onClick={() => setCompareView("radar")}
-                  className={`text-xs px-2.5 py-1 rounded-md transition-all ${compareView === "radar" ? "bg-background shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  레이더
-                </button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {compareView === "bar" ? (
-              <div className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={compareData} barCategoryGap="20%">
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                    <XAxis dataKey="name" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis fontSize={11} tickLine={false} axisLine={false} width={35} />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} />
-                    <Legend wrapperStyle={{ fontSize: "11px" }} />
-                    <Bar dataKey="업무량" fill="#8b5cf6" radius={[4, 4, 0, 0]} animationDuration={600} maxBarSize={32} />
-                    <Bar dataKey="완료율" fill="#22c55e" radius={[4, 4, 0, 0]} animationDuration={600} maxBarSize={32} />
-                    <Bar dataKey="이번달" fill="#06b6d4" radius={[4, 4, 0, 0]} animationDuration={600} maxBarSize={32} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="h-[320px] flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={radarData} outerRadius="70%">
-                    <PolarGrid className="stroke-border/30" />
-                    <PolarAngleAxis dataKey="name" fontSize={11} />
-                    <PolarRadiusAxis fontSize={10} angle={30} domain={[0, 100]} tick={false} />
-                    <Radar name="업무량" dataKey="업무량" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} animationDuration={600} />
-                    <Radar name="완료율" dataKey="완료율" stroke="#22c55e" fill="#22c55e" fillOpacity={0.15} strokeWidth={2} animationDuration={600} />
-                    <Radar name="시간투자" dataKey="시간투자" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.1} strokeWidth={2} animationDuration={600} />
-                    <Legend wrapperStyle={{ fontSize: "11px" }} />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Monthly trend */}
-      {monthlyTrend.length > 1 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-500" />
-              월별 업무량 추이
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[260px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis dataKey="month" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis fontSize={11} tickLine={false} axisLine={false} width={30} />
-                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(val) => [`${val}건`]} />
-                  <Legend wrapperStyle={{ fontSize: "11px" }} />
-                  {activeEntities.map((es) => (
-                    <Line
-                      key={es.entity}
-                      type="monotone"
-                      dataKey={ENTITY_SHORT[es.entity] || es.entity}
-                      stroke={ENTITY_COLORS[es.entity] || "#94a3b8"}
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                      animationDuration={600}
-                    />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Sort controls */}
       <div className="flex items-center gap-2 flex-wrap">
         <Filter className="h-4 w-4 text-muted-foreground" />
@@ -753,6 +656,103 @@ export function EntityGrid({ entityStats: rawStats, allLogs }: EntityGridProps) 
           );
         })}
       </div>
+
+      {/* Comparison charts */}
+      {compareData.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-violet-500" />
+                법인 간 비교
+              </CardTitle>
+              <div className="flex items-center gap-1 bg-accent/50 rounded-lg p-0.5">
+                <button
+                  onClick={() => setCompareView("bar")}
+                  className={`text-xs px-2.5 py-1 rounded-md transition-all ${compareView === "bar" ? "bg-background shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  막대
+                </button>
+                <button
+                  onClick={() => setCompareView("radar")}
+                  className={`text-xs px-2.5 py-1 rounded-md transition-all ${compareView === "radar" ? "bg-background shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  레이더
+                </button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {compareView === "bar" ? (
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={compareData} barCategoryGap="20%">
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis dataKey="name" fontSize={11} tickLine={false} axisLine={false} />
+                    <YAxis fontSize={11} tickLine={false} axisLine={false} width={35} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} />
+                    <Legend wrapperStyle={{ fontSize: "11px" }} />
+                    <Bar dataKey="업무량" fill="#8b5cf6" radius={[4, 4, 0, 0]} animationDuration={600} maxBarSize={32} />
+                    <Bar dataKey="완료율" fill="#22c55e" radius={[4, 4, 0, 0]} animationDuration={600} maxBarSize={32} />
+                    <Bar dataKey="이번달" fill="#06b6d4" radius={[4, 4, 0, 0]} animationDuration={600} maxBarSize={32} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-[320px] flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={radarData} outerRadius="70%">
+                    <PolarGrid className="stroke-border/30" />
+                    <PolarAngleAxis dataKey="name" fontSize={11} />
+                    <PolarRadiusAxis fontSize={10} angle={30} domain={[0, 100]} tick={false} />
+                    <Radar name="업무량" dataKey="업무량" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} animationDuration={600} />
+                    <Radar name="완료율" dataKey="완료율" stroke="#22c55e" fill="#22c55e" fillOpacity={0.15} strokeWidth={2} animationDuration={600} />
+                    <Radar name="시간투자" dataKey="시간투자" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.1} strokeWidth={2} animationDuration={600} />
+                    <Legend wrapperStyle={{ fontSize: "11px" }} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Monthly trend */}
+      {monthlyTrend.length > 1 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-green-500" />
+              월별 업무량 추이
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={monthlyTrend}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey="month" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis fontSize={11} tickLine={false} axisLine={false} width={30} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(val) => [`${val}건`]} />
+                  <Legend wrapperStyle={{ fontSize: "11px" }} />
+                  {activeEntities.map((es) => (
+                    <Line
+                      key={es.entity}
+                      type="monotone"
+                      dataKey={ENTITY_SHORT[es.entity] || es.entity}
+                      stroke={ENTITY_COLORS[es.entity] || "#94a3b8"}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      animationDuration={600}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
