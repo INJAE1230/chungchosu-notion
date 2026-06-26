@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import { CalendarDays, CalendarRange, CalendarCheck } from "lucide-react";
 
 export function GenerateButtons() {
@@ -28,7 +29,7 @@ export function GenerateButtons() {
       }
       router.refresh();
     } catch {
-      toast.error("업무 생성에 실패했습니다");
+      toastError("업무 생성에 실패했습니다", () => handleGenerate(mode));
     } finally {
       setLoading(null);
     }

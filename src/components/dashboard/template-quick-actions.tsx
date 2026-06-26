@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import { CalendarDays, CalendarRange, Settings } from "lucide-react";
 
 export function TemplateQuickActions() {
@@ -35,7 +36,7 @@ export function TemplateQuickActions() {
       }
       router.refresh();
     } catch {
-      toast.error("업무 생성에 실패했습니다");
+      toastError("업무 생성에 실패했습니다", () => handleGenerate(mode));
     } finally {
       setLoading(false);
     }
@@ -46,7 +47,7 @@ export function TemplateQuickActions() {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium">반복 업무</h3>
         <Link href="/templates">
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button variant="ghost" size="icon" className="h-10 w-10 md:h-8 md:w-8">
             <Settings className="h-3.5 w-3.5" />
           </Button>
         </Link>

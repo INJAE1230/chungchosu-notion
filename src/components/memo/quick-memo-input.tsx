@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import { MemoPreview } from "./memo-preview";
 import type { WorkLogFormData, FileAttachment } from "@/lib/types";
 
@@ -34,7 +35,7 @@ export function QuickMemoInput() {
         setFiles((prev) => [...prev, data]);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "업로드 실패");
+      toastError(err instanceof Error ? err.message : "업로드 실패");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -56,7 +57,7 @@ export function QuickMemoInput() {
       setText((prev) => (prev ? `${prev}\n${ocrText}` : ocrText));
       toast.success("영수증 인식 완료");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "인식 실패");
+      toastError(err instanceof Error ? err.message : "인식 실패");
     } finally {
       setOcrLoading(false);
     }

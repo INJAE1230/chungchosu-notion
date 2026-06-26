@@ -29,6 +29,7 @@ import {
   Download,
 } from "lucide-react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import {
   EMPLOYMENT_STATUS_COLORS,
   ATTENDANCE_CATEGORY_COLORS,
@@ -107,7 +108,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
       if (empRes.ok) setEmployees(await empRes.json());
       if (attRes.ok) setAttendance(await attRes.json());
     } catch {
-      toast.error("데이터 새로고침 실패");
+      toastError("데이터 새로고침 실패", refreshData);
     }
   }
 
@@ -144,7 +145,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
       toast.success(`${emp.name} 직원이 삭제되었습니다`);
       await refreshData();
     } catch {
-      toast.error("삭제에 실패했습니다");
+      toastError("삭제에 실패했습니다");
     } finally {
       setDeletingId(null);
     }
@@ -204,7 +205,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
       setShowBulkDialog(false);
       await refreshData();
     } catch {
-      toast.error("일괄 등록에 실패했습니다");
+      toastError("일괄 등록에 실패했습니다");
     } finally {
       setBulkLoading(false);
     }
@@ -224,7 +225,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
       toast.success(msg);
       await refreshData();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "엑셀 가져오기 실패");
+      toastError(e instanceof Error ? e.message : "엑셀 가져오기 실패");
     } finally {
       setImportLoading(false);
     }
@@ -246,7 +247,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
       setShowExportDialog(false);
       toast.success("엑셀 다운로드 완료");
     } catch {
-      toast.error("엑셀 내보내기 실패");
+      toastError("엑셀 내보내기 실패");
     } finally {
       setExportLoading(false);
     }
@@ -260,7 +261,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
       toast.success("근태 기록이 삭제되었습니다");
       await refreshData();
     } catch {
-      toast.error("삭제에 실패했습니다");
+      toastError("삭제에 실패했습니다");
     } finally {
       setDeletingId(null);
     }

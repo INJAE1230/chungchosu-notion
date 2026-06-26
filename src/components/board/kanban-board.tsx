@@ -13,6 +13,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -119,7 +120,7 @@ export function KanbanBoard({ initialLogs }: KanbanBoardProps) {
           l.id === logId ? { ...l, status: currentLog.status } : l
         )
       );
-      toast.error("상태 변경에 실패했습니다");
+      toastError("상태 변경에 실패했습니다");
     } finally {
       setUpdatingId(null);
     }

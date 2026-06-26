@@ -113,13 +113,13 @@ export function AttendanceCalendar({
           ))}
         </select>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={prevMonth}>
+          <Button variant="ghost" size="icon" className="h-10 w-10 md:h-8 md:w-8" onClick={prevMonth}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm font-medium w-28 text-center">
             {year}년 {month + 1}월
           </span>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={nextMonth}>
+          <Button variant="ghost" size="icon" className="h-10 w-10 md:h-8 md:w-8" onClick={nextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

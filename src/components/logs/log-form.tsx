@@ -14,10 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
+import { ChevronDown } from "lucide-react";
 import { PROJECTS, STATUSES, PRIORITIES, TAGS, TAG_COLORS, PRIORITY_COLORS, PROJECT_COLORS, ACHIEVEMENT_RATINGS } from "@/lib/constants";
 import { FileUpload } from "@/components/file-upload";
 import type { OcrResult } from "@/components/file-upload";
 import type { WorkLog, WorkLogFormData, Tag, Priority, AchievementRating, Project, Track } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 function getToday() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().split("T")[0];
@@ -45,6 +48,9 @@ export function LogForm({ log, initialDate }: { log?: WorkLog; initialDate?: str
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState(false);
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [showAdvanced, setShowAdvanced] = useState(
+    isEdit && !!(form.hours || form.link || form.outcome || form.rating || form.trackId || (form.attachments && form.attachments.length > 0))
+  );
 
   useEffect(() => {
     fetch("/api/tracks").then((r) => r.json()).then(setTracks).catch(() => {});
@@ -116,7 +122,10 @@ export function LogForm({ log, initialDate }: { log?: WorkLog; initialDate?: str
       router.push("/logs");
       router.refresh();
     } catch {
-      toast.error(isEdit ? "수정에 실패했습니다" : "추가에 실패했습니다");
+      toastError(
+        isEdit ? "수정에 실패했습니다" : "추가에 실패했습니다",
+        () => handleSubmit(e)
+      );
     } finally {
       setLoading(false);
     }
@@ -238,102 +247,119 @@ export function LogForm({ log, initialDate }: { log?: WorkLog; initialDate?: str
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">소요시간 (시간)</label>
-          <Input
-            type="number"
-            step="0.5"
-            min="0"
-            value={form.hours ?? ""}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                hours: e.target.value ? Number(e.target.value) : null,
-              })
-            }
-            placeholder="예: 2.5"
-          />
-        </div>
+      {/* 상세 옵션 토글 */}
+      <button
+        type="button"
+        onClick={() => setShowAdvanced(!showAdvanced)}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ChevronDown className={cn("h-4 w-4 transition-transform", !showAdvanced && "-rotate-90")} />
+        상세 옵션
+        {!showAdvanced && (form.hours || form.link || form.trackId || (form.attachments && form.attachments.length > 0)) && (
+          <span className="text-xs text-blue-500">• 입력된 항목 있음</span>
+        )}
+      </button>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">관련 링크</label>
-          <Input
-            type="url"
-            value={form.link || ""}
-            onChange={(e) =>
-              setForm({ ...form, link: e.target.value || null })
-            }
-            placeholder="https://..."
-          />
-        </div>
-      </div>
+      {showAdvanced && (
+        <div className="space-y-5 rounded-lg border bg-muted/30 p-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">소요시간 (시간)</label>
+              <Input
+                type="number"
+                step="0.5"
+                min="0"
+                value={form.hours ?? ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    hours: e.target.value ? Number(e.target.value) : null,
+                  })
+                }
+                placeholder="예: 2.5"
+              />
+            </div>
 
-      {tracks.length > 0 && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">트랙 연결</label>
-          <Select
-            value={form.trackId || "none"}
-            onValueChange={(v) => setForm({ ...form, trackId: v === "none" ? null : v })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="트랙 선택 (선택사항)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">없음</SelectItem>
-              {tracks.map((t) => (
-                <SelectItem key={t.id} value={t.id}>
-                  {t.title}
-                  {t.entity ? ` (${t.entity})` : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      <FileUpload
-        attachments={form.attachments || []}
-        onChange={(attachments) => setForm({ ...form, attachments })}
-        onOcrResult={handleOcrResult}
-      />
-
-      {form.status === "완료" && (
-        <div className="space-y-4 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-4">
-          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-            성과 기록 (완료된 업무)
-          </p>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">성과/결과</label>
-            <Textarea
-              value={form.outcome || ""}
-              onChange={(e) =>
-                setForm({ ...form, outcome: e.target.value || null })
-              }
-              placeholder="이 업무의 결과물이나 성과를 기록하세요"
-              rows={3}
-            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">관련 링크</label>
+              <Input
+                type="url"
+                value={form.link || ""}
+                onChange={(e) =>
+                  setForm({ ...form, link: e.target.value || null })
+                }
+                placeholder="https://..."
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">성과등급</label>
-            <Select
-              value={form.rating || ""}
-              onValueChange={(v) =>
-                setForm({ ...form, rating: (v || null) as AchievementRating | null })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="등급 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {ACHIEVEMENT_RATINGS.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {r}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+
+          {tracks.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">트랙 연결</label>
+              <Select
+                value={form.trackId || "none"}
+                onValueChange={(v) => setForm({ ...form, trackId: v === "none" ? null : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="트랙 선택 (선택사항)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">없음</SelectItem>
+                  {tracks.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.title}
+                      {t.entity ? ` (${t.entity})` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <FileUpload
+            attachments={form.attachments || []}
+            onChange={(attachments) => setForm({ ...form, attachments })}
+            onOcrResult={handleOcrResult}
+          />
+
+          {form.status === "완료" && (
+            <div className="space-y-4 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-4">
+              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                성과 기록 (완료된 업무)
+              </p>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">성과/결과</label>
+                <Textarea
+                  value={form.outcome || ""}
+                  onChange={(e) =>
+                    setForm({ ...form, outcome: e.target.value || null })
+                  }
+                  placeholder="이 업무의 결과물이나 성과를 기록하세요"
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">성과등급</label>
+                <Select
+                  value={form.rating || ""}
+                  onValueChange={(v) =>
+                    setForm({ ...form, rating: (v || null) as AchievementRating | null })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="등급 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACHIEVEMENT_RATINGS.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {r}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

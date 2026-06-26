@@ -151,7 +151,7 @@ export function AchievementList({ achievements }: { achievements: WorkLog[] }) {
                     )}
                   </div>
                   <Link href={`/logs/${log.id}`}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-10 w-10 md:h-8 md:w-8 shrink-0">
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   </Link>

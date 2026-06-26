@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import type { RecurringTemplate } from "@/lib/types";
 
 export function DeleteTemplateDialog({
@@ -33,7 +34,7 @@ export function DeleteTemplateDialog({
       toast.success("템플릿이 삭제되었습니다");
       onDeleted();
     } catch {
-      toast.error("삭제에 실패했습니다");
+      toastError("삭제에 실패했습니다", handleDelete);
     } finally {
       setLoading(false);
     }

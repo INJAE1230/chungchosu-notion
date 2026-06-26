@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import { STATUS_COLORS, PROJECT_COLORS, TAG_COLORS, PRIORITY_COLORS } from "@/lib/constants";
 import { Paperclip } from "lucide-react";
 import type { WorkLogFormData } from "@/lib/types";
@@ -66,7 +67,7 @@ export function MemoPreview({
       onReset();
       router.refresh();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "저장 실패");
+      toastError(e instanceof Error ? e.message : "저장 실패", handleSave);
     } finally {
       setSaving(false);
     }

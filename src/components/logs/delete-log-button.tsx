@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 
 export function DeleteLogButton({ logId, title }: { logId: string; title: string }) {
   const router = useRouter();
@@ -28,7 +29,7 @@ export function DeleteLogButton({ logId, title }: { logId: string; title: string
       router.push("/logs");
       router.refresh();
     } catch {
-      toast.error("삭제에 실패했습니다");
+      toastError("삭제에 실패했습니다", handleDelete);
     } finally {
       setLoading(false);
     }

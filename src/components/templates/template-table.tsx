@@ -21,6 +21,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { MoreHorizontal, Pencil, Trash2, Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import { DAY_OF_WEEK_LABELS, TAG_COLORS } from "@/lib/constants";
 import { TemplateFormDialog } from "./template-form-dialog";
 import { DeleteTemplateDialog } from "./delete-template-dialog";
@@ -58,7 +59,7 @@ export function TemplateTable({
       toast.success(`"${template.name}" ${template.active ? "비활성" : "활성"}화됨`);
       router.refresh();
     } catch {
-      toast.error("상태 변경 실패");
+      toastError("상태 변경에 실패했습니다", () => handleToggleActive(template));
     } finally {
       setTogglingId(null);
     }
@@ -77,7 +78,7 @@ export function TemplateTable({
       toast.success(`"${template.name}" 업무가 생성되었습니다`);
       router.refresh();
     } catch {
-      toast.error("업무 생성에 실패했습니다");
+      toastError("업무 생성에 실패했습니다", () => handleGenerateSingle(template));
     } finally {
       setGeneratingId(null);
     }
@@ -136,7 +137,7 @@ export function TemplateTable({
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button variant="ghost" size="icon" className="h-10 w-10 md:h-8 md:w-8">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -226,7 +227,7 @@ export function TemplateTable({
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-10 w-10 md:h-8 md:w-8">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

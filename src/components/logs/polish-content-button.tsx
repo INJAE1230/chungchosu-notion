@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 
 export function PolishContentButton({ logId, hasContent }: { logId: string; hasContent: boolean }) {
   const router = useRouter();
@@ -23,7 +24,7 @@ export function PolishContentButton({ logId, hasContent }: { logId: string; hasC
       toast.success("업무내용이 다듬어졌습니다");
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "다듬기에 실패했습니다");
+      toastError(error instanceof Error ? error.message : "다듬기에 실패했습니다", handlePolish);
     } finally {
       setLoading(false);
     }

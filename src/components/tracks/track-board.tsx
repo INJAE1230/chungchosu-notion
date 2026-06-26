@@ -29,6 +29,7 @@ import {
   Building2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import {
   PieChart,
   Pie,
@@ -138,7 +139,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs }: TrackBoardProps) 
       setEditingTrack(null);
       setForm(emptyForm());
     } catch {
-      toast.error("저장 실패");
+      toastError("저장에 실패했습니다", handleSave);
     } finally {
       setSaving(false);
     }
@@ -152,7 +153,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs }: TrackBoardProps) 
       if (selected?.id === track.id) setSelected(null);
       toast.success("트랙이 삭제되었습니다");
     } catch {
-      toast.error("삭제 실패");
+      toastError("삭제에 실패했습니다", () => handleDelete(track));
     }
   }
 

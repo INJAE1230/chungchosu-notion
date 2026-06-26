@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import {
   PROJECTS,
   STATUSES,
@@ -109,7 +110,7 @@ export function TemplateFormDialog({
       onClose();
       router.refresh();
     } catch {
-      toast.error(isEdit ? "수정에 실패했습니다" : "추가에 실패했습니다");
+      toastError(isEdit ? "수정에 실패했습니다" : "추가에 실패했습니다");
     } finally {
       setLoading(false);
     }

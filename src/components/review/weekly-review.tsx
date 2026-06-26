@@ -17,6 +17,7 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import { STATUS_COLORS, PROJECT_COLORS, PRIORITY_COLORS } from "@/lib/constants";
 import { getWeekRange, categorizeForReview } from "@/lib/review-utils";
 import type { WorkLog, Status } from "@/lib/types";
@@ -124,7 +125,7 @@ export function WeeklyReview({ allLogs: initialLogs }: WeeklyReviewProps) {
       setProcessedInfo((prev) => { const next = new Map(prev); next.delete(id); return next; });
       toast.success("되돌렸습니다");
     } catch {
-      toast.error("되돌리기에 실패했습니다");
+      toastError("되돌리기에 실패했습니다");
     } finally {
       setLoadingId(null);
     }
@@ -148,7 +149,7 @@ export function WeeklyReview({ allLogs: initialLogs }: WeeklyReviewProps) {
         },
       });
     } catch {
-      toast.error("상태 변경에 실패했습니다");
+      toastError("상태 변경에 실패했습니다");
     } finally {
       setLoadingId(null);
     }
@@ -163,7 +164,7 @@ export function WeeklyReview({ allLogs: initialLogs }: WeeklyReviewProps) {
       setProcessedIds((prev) => new Set(prev).add(id));
       toast.success("업무가 삭제되었습니다");
     } catch {
-      toast.error("삭제에 실패했습니다");
+      toastError("삭제에 실패했습니다");
     } finally {
       setLoadingId(null);
     }

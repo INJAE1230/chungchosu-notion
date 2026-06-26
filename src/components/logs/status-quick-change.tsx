@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -39,7 +40,7 @@ export function StatusQuickChange({ logId, currentStatus, currentPriority }: Sta
       toast.success(`${field === "status" ? "상태" : "우선순위"} 변경 완료`);
       router.refresh();
     } catch {
-      toast.error("변경에 실패했습니다");
+      toastError("변경에 실패했습니다", () => handleChange(field, value));
     } finally {
       setLoading(false);
     }

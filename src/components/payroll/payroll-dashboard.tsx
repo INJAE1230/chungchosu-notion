@@ -38,6 +38,7 @@ import {
   FileText,
 } from "lucide-react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -357,7 +358,7 @@ export function PayrollDashboard({
       const listRes = await fetch("/api/payroll");
       if (listRes.ok) setRecords(await listRes.json());
     } catch {
-      toast.error(editingId ? "수정에 실패했습니다" : "등록에 실패했습니다");
+      toastError(editingId ? "수정에 실패했습니다" : "등록에 실패했습니다");
     } finally {
       setSaving(false);
     }
@@ -371,7 +372,7 @@ export function PayrollDashboard({
       toast.success("삭제되었습니다");
       setRecords((prev) => prev.filter((r) => r.id !== id));
     } catch {
-      toast.error("삭제에 실패했습니다");
+      toastError("삭제에 실패했습니다");
     }
   };
 

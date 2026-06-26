@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Paperclip, X, Loader2, FileText, ScanSearch, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { toastError } from "@/lib/toast-utils";
 import type { FileAttachment } from "@/lib/types";
 
 export interface OcrResult {
@@ -58,7 +59,7 @@ export function FileUpload({ attachments, onChange, onOcrResult, maxFiles = 20 }
       onOcrResult?.(data);
       toast.success("영수증 인식 완료");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "인식 실패");
+      toastError(err instanceof Error ? err.message : "인식 실패");
     } finally {
       setOcrLoading(null);
     }
@@ -93,7 +94,7 @@ export function FileUpload({ attachments, onChange, onOcrResult, maxFiles = 20 }
       onChange([...attachments, ...results]);
       toast.success(`${results.length}개 파일 업로드 완료`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "업로드 실패");
+      toastError(err instanceof Error ? err.message : "업로드 실패");
     } finally {
       setUploading(false);
       setUploadingNames([]);
