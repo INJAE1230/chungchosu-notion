@@ -107,8 +107,16 @@ function buildFilter(filters: WorkLogFilters) {
   }
   if (filters.search) {
     conditions.push({
-      property: "업무",
-      title: { contains: filters.search },
+      or: [
+        {
+          property: "업무",
+          title: { contains: filters.search },
+        },
+        {
+          property: "업무내용",
+          rich_text: { contains: filters.search },
+        },
+      ],
     });
   }
 
