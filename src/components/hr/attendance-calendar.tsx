@@ -19,16 +19,24 @@ interface AttendanceCalendarProps {
   onDeleteClick: (record: AttendanceRecord) => void;
 }
 
+function toLocalDateStr(d: Date): string {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 function getMonthDays(year: number, month: number) {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const days: { date: string; dayOfWeek: number; isCurrentMonth: boolean }[] = [];
+  const days: { date: string; day: number; dayOfWeek: number; isCurrentMonth: boolean }[] = [];
 
   const startPad = firstDay.getDay();
   for (let i = startPad - 1; i >= 0; i--) {
     const d = new Date(year, month, -i);
     days.push({
-      date: d.toISOString().slice(0, 10),
+      date: toLocalDateStr(d),
+      day: d.getDate(),
       dayOfWeek: d.getDay(),
       isCurrentMonth: false,
     });
@@ -37,7 +45,8 @@ function getMonthDays(year: number, month: number) {
   for (let d = 1; d <= lastDay.getDate(); d++) {
     const dt = new Date(year, month, d);
     days.push({
-      date: dt.toISOString().slice(0, 10),
+      date: toLocalDateStr(dt),
+      day: d,
       dayOfWeek: dt.getDay(),
       isCurrentMonth: true,
     });
@@ -48,7 +57,8 @@ function getMonthDays(year: number, month: number) {
     for (let i = 1; i <= remaining; i++) {
       const d = new Date(year, month + 1, i);
       days.push({
-        date: d.toISOString().slice(0, 10),
+        date: toLocalDateStr(d),
+        day: d.getDate(),
         dayOfWeek: d.getDay(),
         isCurrentMonth: false,
       });
@@ -96,7 +106,7 @@ export function AttendanceCalendar({
     else setMonth(month + 1);
   };
 
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = toLocalDateStr(today);
 
   return (
     <div className="space-y-4">
@@ -187,7 +197,7 @@ export function AttendanceCalendar({
               <div className={`text-[11px] font-medium ${
                 day.dayOfWeek === 0 ? "text-red-400" : day.dayOfWeek === 6 ? "text-blue-400" : ""
               }`}>
-                {new Date(day.date + "T00:00:00").getDate()}
+                {day.day}
               </div>
               <div className="mt-0.5">{cellContent}</div>
               {day.isCurrentMonth && !record && !isWeekend && (

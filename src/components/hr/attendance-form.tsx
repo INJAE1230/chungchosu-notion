@@ -20,7 +20,7 @@ export function AttendanceForm({ employees, onSubmit, onCancel, initialEmployeeI
 
   const [form, setForm] = useState<AttendanceFormData>({
     employeeId: initialEmployeeId || activeEmployees[0]?.id || "",
-    date: initialDate || new Date().toISOString().slice(0, 10),
+    date: initialDate || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`; })(),
     category: "연차",
     note: "",
     deductionMethod: undefined,

@@ -182,7 +182,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
         if (dow === 0 || dow === 6) continue;
         const dayLabel = dayIndexToLabel[dow];
         if (!restSet.has(dayLabel)) continue;
-        const dateStr = dt.toISOString().slice(0, 10);
+        const dateStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
         if (existingSet.has(`${emp.id}_${dateStr}`)) continue;
         records.push({ employeeId: emp.id, employeeName: emp.name, date: dateStr, category: "정휴무" });
       }

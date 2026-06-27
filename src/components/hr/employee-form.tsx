@@ -38,7 +38,8 @@ interface EmployeeFormProps {
 }
 
 export function EmployeeForm({ initial, onSubmit, onCancel, submitLabel = "등록" }: EmployeeFormProps) {
-  const defaultJoinDate = initial?.joinDate || new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const defaultJoinDate = initial?.joinDate || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const [form, setForm] = useState<EmployeeFormData>({
     name: initial?.name || "",
     entity: initial?.entity || null,

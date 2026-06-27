@@ -113,7 +113,7 @@ function filterLogsByPeriod(logs: WorkLog[], period: PeriodFilter): WorkLog[] {
   const cutoff = new Date(now.getFullYear(), now.getMonth() - (
     period === "thisMonth" ? 0 : period === "last3Months" ? 2 : 5
   ), 1);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, "0")}-${String(cutoff.getDate()).padStart(2, "0")}`;
   return logs.filter((l) => l.date >= cutoffStr);
 }
 
