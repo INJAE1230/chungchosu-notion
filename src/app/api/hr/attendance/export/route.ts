@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       })),
     }));
 
-    const buf = generateAttendanceExcel(month, sections);
+    const buf = await generateAttendanceExcel(month, sections);
     const [y, m] = month.split("-");
     const filename = encodeURIComponent(`${y}년 ${parseInt(m)}월 근태현황.xlsx`);
 

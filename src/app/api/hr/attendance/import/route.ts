@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     }
 
     const buffer = await file.arrayBuffer();
-    const parsed = parseAttendanceExcel(buffer);
+    const parsed = await parseAttendanceExcel(buffer);
 
     if (parsed.length === 0) {
       return NextResponse.json({ error: "파싱 가능한 근태 데이터가 없습니다" }, { status: 400 });

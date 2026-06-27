@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import type { AttendanceCategory } from "./hr-types";
 
 const CELL_TO_CATEGORY: Record<string, AttendanceCategory | null> = {
@@ -34,59 +34,66 @@ export interface ParsedAttendanceRow {
   records: { date: string; category: AttendanceCategory }[];
 }
 
-export function parseAttendanceExcel(buffer: ArrayBuffer): ParsedAttendanceRow[] {
-  const wb = XLSX.read(buffer, { type: "array" });
-  const ws = wb.Sheets[wb.SheetNames[0]];
+function getCellText(row: ExcelJS.Row, col: number): string {
+  const cell = row.getCell(col);
+  const val = cell.value;
+  if (val === null || val === undefined) return "";
+  if (typeof val === "object" && "richText" in val) {
+    return (val as ExcelJS.CellRichTextValue).richText.map((r) => r.text).join("");
+  }
+  return String(val).trim();
+}
+
+export function parseAttendanceExcel(buffer: ArrayBuffer): Promise<ParsedAttendanceRow[]> {
+  return parseAttendanceExcelAsync(buffer);
+}
+
+async function parseAttendanceExcelAsync(buffer: ArrayBuffer): Promise<ParsedAttendanceRow[]> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
+  const ws = workbook.worksheets[0];
   if (!ws) return [];
 
-  const data = XLSX.utils.sheet_to_json<(string | number | null)[]>(ws, { header: 1, defval: null });
   const results: ParsedAttendanceRow[] = [];
-
-  let year = new Date().getFullYear();
-  let month = 1;
+  const year = new Date().getFullYear();
   let dateColumns: { col: number; date: string }[] = [];
 
-  for (let r = 0; r < data.length; r++) {
-    const row = data[r];
-    if (!row || row.length === 0) continue;
-
-    const firstCell = String(row[0] || "").trim();
-    const secondCell = String(row[1] || "").trim();
+  ws.eachRow((row, rowNumber) => {
+    const firstCell = getCellText(row, 1);
+    const secondCell = getCellText(row, 2);
 
     if (secondCell === "구분" || firstCell === "구분") {
       dateColumns = [];
-      const startCol = firstCell === "구분" ? 7 : 8;
-      for (let c = startCol; c < row.length; c++) {
-        const header = String(row[c] || "").trim();
+      const startCol = firstCell === "구분" ? 8 : 9;
+      for (let c = startCol; c <= row.cellCount; c++) {
+        const header = getCellText(row, c);
         const match = header.match(/^(\d{1,2})\/(\d{1,2})$/);
         if (match) {
           const m = parseInt(match[1]);
           const d = parseInt(match[2]);
           if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
-            month = m;
             const dateStr = `${year}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
             dateColumns.push({ col: c, date: dateStr });
           }
         }
       }
-      continue;
+      return;
     }
 
-    if (firstCell.includes("부") && firstCell.includes("서")) continue;
+    if (firstCell.includes("부") && firstCell.includes("서")) return;
+    if (dateColumns.length === 0) return;
 
-    if (dateColumns.length === 0) continue;
-
-    const dept = String(row[0] || "").trim();
-    const pos = String(row[1] || "").trim();
-    const rawName = String(row[2] || "").trim();
+    const dept = firstCell;
+    const pos = secondCell;
+    const rawName = getCellText(row, 3);
     const name = rawName.replace(/\s+/g, "").replace(/\(.*\)$/, "");
 
-    if (!name || name.length < 2) continue;
-    if (["구분", "부서", "부 서"].includes(dept)) continue;
+    if (!name || name.length < 2) return;
+    if (["구분", "부서", "부 서"].includes(dept)) return;
 
     const records: { date: string; category: AttendanceCategory }[] = [];
     for (const { col, date } of dateColumns) {
-      const cellVal = String(row[col] || "").trim();
+      const cellVal = getCellText(row, col);
       if (!cellVal) continue;
       const baseVal = cellVal.split("/")[0].split("(")[0].trim();
       const category = CELL_TO_CATEGORY[baseVal];
@@ -98,12 +105,12 @@ export function parseAttendanceExcel(buffer: ArrayBuffer): ParsedAttendanceRow[]
     if (records.length > 0 || name) {
       results.push({ name, department: dept, position: pos, records });
     }
-  }
+  });
 
   return results;
 }
 
-export function generateAttendanceExcel(
+export async function generateAttendanceExcel(
   monthStr: string,
   sections: {
     entity: string;
@@ -116,41 +123,31 @@ export function generateAttendanceExcel(
       dailyRecords: Record<string, string>;
     }[];
   }[]
-): ArrayBuffer {
-  const wb = XLSX.utils.book_new();
+): Promise<ArrayBuffer> {
   const [yearStr, monthNum] = monthStr.split("-");
   const year = parseInt(yearStr);
   const month = parseInt(monthNum);
   const daysInMonth = new Date(year, month, 0).getDate();
 
-  const rows: (string | number | null)[][] = [];
+  const workbook = new ExcelJS.Workbook();
+  const ws = workbook.addWorksheet(`${year}년 ${String(month).padStart(2, "0")}`);
 
   for (const section of sections) {
-    const legend = "정·근\t관공\t휴무\t연차\t대출\t출장\t조퇴";
-    const entityRow: (string | number | null)[] = new Array(8 + daysInMonth + 1).fill(null);
-    entityRow[0] = section.entity;
-    entityRow[8] = "정·근";
-    entityRow[9] = "관공";
-    entityRow[10] = "휴무";
-    entityRow[11] = "연차";
-    entityRow[12] = "대출";
-    entityRow[13] = "출장";
-    entityRow[14] = "조퇴";
-    rows.push(entityRow);
+    const entityRow = ws.addRow([section.entity]);
+    entityRow.font = { bold: true };
 
-    const headerRow: (string | number | null)[] = ["구분", "", "", "", "전월 이월 현황", "", "", `${month}월\n발생\n휴무합`];
+    const headerCells: (string | number | null)[] = ["구분", "", "", "", "전월 이월 현황", "", "", `${month}월 발생 휴무합`];
     for (let d = 1; d <= daysInMonth; d++) {
-      headerRow.push(`${month}/${d}`);
+      headerCells.push(`${month}/${d}`);
     }
-    headerRow.push("휴일합");
-    rows.push(headerRow);
+    headerCells.push("휴일합");
+    const hRow = ws.addRow(headerCells);
+    hRow.font = { bold: true };
 
-    const subHeader: (string | number | null)[] = ["부 서", "직급", "성 명", "입사일", "연차", "미*휴", "대출"];
-    for (let i = 0; i <= daysInMonth; i++) subHeader.push(null);
-    rows.push(subHeader);
+    ws.addRow(["부 서", "직급", "성 명", "입사일", "연차", "미*휴", "대출"]);
 
     for (const emp of section.employees) {
-      const empRow: (string | number | null)[] = [
+      const empCells: (string | number | null)[] = [
         emp.department,
         emp.position,
         emp.name,
@@ -167,28 +164,25 @@ export function generateAttendanceExcel(
         const category = emp.dailyRecords[dateStr];
         if (category) {
           const cellVal = CATEGORY_TO_CELL[category] || category;
-          empRow.push(cellVal);
+          empCells.push(cellVal);
           if (["정휴무", "관공휴일", "연차", "반차"].includes(category)) restCount++;
         } else {
           const dow = new Date(year, month - 1, d).getDay();
           if (dow === 0 || dow === 6) {
-            empRow.push("휴무");
+            empCells.push("휴무");
             restCount++;
           } else {
-            empRow.push("정·근");
+            empCells.push("정·근");
           }
         }
       }
-      empRow[7] = restCount;
-      empRow.push(restCount);
-      rows.push(empRow);
+      empCells[7] = restCount;
+      empCells.push(restCount);
+      ws.addRow(empCells);
     }
 
-    rows.push(new Array(8 + daysInMonth + 1).fill(null));
+    ws.addRow([]);
   }
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, `${year}년 ${String(month).padStart(2, "0")}`);
-  const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
-  return buf;
+  return await workbook.xlsx.writeBuffer() as unknown as ArrayBuffer;
 }

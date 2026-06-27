@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Noto_Sans_KR } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -21,27 +22,35 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const secret = process.env.API_SECRET;
+  const cookieStore = await cookies();
+  const isAuthenticated = !secret || cookieStore.get("auth-token")?.value === secret;
+
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className={`${notoSansKR.className}`}>
         <ThemeProvider>
-          <div className="flex min-h-screen">
-            <DesktopSidebar />
-            <div className="flex flex-1 flex-col">
-              <MobileHeader />
-              <main className="flex-1 px-4 py-8 pb-20 md:px-10 md:pb-8">
-                <div className="mx-auto max-w-5xl animate-fade-in-up">
-                  {children}
-                </div>
-              </main>
-              <MobileBottomNav />
+          {isAuthenticated ? (
+            <div className="flex min-h-screen">
+              <DesktopSidebar />
+              <div className="flex flex-1 flex-col">
+                <MobileHeader />
+                <main className="flex-1 px-4 py-8 pb-20 md:px-10 md:pb-8">
+                  <div className="mx-auto max-w-5xl animate-fade-in-up">
+                    {children}
+                  </div>
+                </main>
+                <MobileBottomNav />
+              </div>
             </div>
-          </div>
+          ) : (
+            children
+          )}
           <Toaster position="top-right" richColors />
         </ThemeProvider>
       </body>
