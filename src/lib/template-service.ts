@@ -147,6 +147,18 @@ export async function deleteTemplate(pageId: string): Promise<void> {
 
 import { getKSTNow, formatDate } from "./date-utils";
 
+function getISOWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+function getDailyDate(): string {
+  return formatDate(getKSTNow());
+}
+
 function getWeekDate(dayOfWeek: number): string {
   const now = getKSTNow();
   const currentDay = now.getDay();
@@ -179,8 +191,77 @@ function getQuarterDate(dayOfMonth: number): string {
   return formatDate(new Date(year, quarterStartMonth, clampedDay));
 }
 
+function getSemiannualDate(dayOfMonth: number): string {
+  const now = getKSTNow();
+  const month = now.getMonth();
+  const halfStartMonth = month < 6 ? 0 : 6;
+  const year = now.getFullYear();
+  const lastDay = new Date(year, halfStartMonth + 1, 0).getDate();
+  const clampedDay = dayOfMonth === 0 ? lastDay : Math.min(dayOfMonth, lastDay);
+  return formatDate(new Date(year, halfStartMonth, clampedDay));
+}
+
+function getAnnualDate(month: number, day: number): string {
+  const now = getKSTNow();
+  const year = now.getFullYear();
+  const lastDay = new Date(year, month, 0).getDate();
+  const clampedDay = day === 0 ? lastDay : Math.min(day, lastDay);
+  return formatDate(new Date(year, month - 1, clampedDay));
+}
+
+function getMonthlyNthWeekdayDate(weekOrdinal: number, dayOfWeek: number): string {
+  const now = getKSTNow();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  const firstDayOfWeek = new Date(year, month, 1).getDay();
+  let firstOccurrence = dayOfWeek - firstDayOfWeek;
+  if (firstOccurrence < 0) firstOccurrence += 7;
+  firstOccurrence += 1;
+
+  const lastDay = new Date(year, month + 1, 0).getDate();
+
+  let targetDay: number;
+  if (weekOrdinal === 5) {
+    let last = firstOccurrence;
+    while (last + 7 <= lastDay) last += 7;
+    targetDay = last;
+  } else {
+    targetDay = firstOccurrence + (weekOrdinal - 1) * 7;
+    if (targetDay > lastDay) {
+      let last = firstOccurrence;
+      while (last + 7 <= lastDay) last += 7;
+      targetDay = last;
+    }
+  }
+
+  return formatDate(new Date(year, month, targetDay));
+}
+
+function getTemplateDates(tmpl: import("./types").RecurringTemplate): string[] {
+  switch (tmpl.frequency) {
+    case "매일":
+      return [getDailyDate()];
+    case "매주":
+    case "격주":
+      return tmpl.dayValues.map(getWeekDate);
+    case "매월":
+      return tmpl.dayValues.map(getMonthDate);
+    case "매분기":
+      return tmpl.dayValues.map(getQuarterDate);
+    case "반기":
+      return tmpl.dayValues.map(getSemiannualDate);
+    case "매년":
+      return [getAnnualDate(tmpl.dayValues[0] ?? 1, tmpl.dayValues[1] ?? 1)];
+    case "매월N번째요일":
+      return [getMonthlyNthWeekdayDate(tmpl.dayValues[0] ?? 1, tmpl.dayValues[1] ?? 1)];
+    default:
+      return tmpl.dayValues.map(getMonthDate);
+  }
+}
+
 export async function generateWorkLogs(
-  mode: "이번주" | "이번달" | "이번분기",
+  mode: "오늘" | "이번주" | "이번달" | "이번분기" | "이번반기" | "올해",
   templateIds?: string[]
 ): Promise<{ generated: number; titles: string[]; skipped: string[] }> {
   let templates = await getAllTemplates();
@@ -191,44 +272,32 @@ export async function generateWorkLogs(
     templates = templates.filter((t) => idSet.has(t.id));
   }
 
-  if (mode === "이번주") {
-    templates = templates.filter((t) => t.frequency === "매주");
-  } else if (mode === "이번분기") {
-    templates = templates.filter((t) => t.frequency === "매분기");
-  } else {
-    templates = templates.filter((t) => t.frequency === "매월");
-  }
+  const modeFrequencyMap: Record<string, Frequency[]> = {
+    오늘: ["매일"],
+    이번주: ["매주", "격주"],
+    이번달: ["매월", "매월N번째요일"],
+    이번분기: ["매분기"],
+    이번반기: ["반기"],
+    올해: ["매년"],
+  };
+  const allowed = modeFrequencyMap[mode] ?? [];
+  templates = templates.filter((t) => allowed.includes(t.frequency));
 
   const titles: string[] = [];
   const skipped: string[] = [];
 
   for (const tmpl of templates) {
-    for (const day of tmpl.dayValues) {
-      const date =
-        mode === "이번주" ? getWeekDate(day) : mode === "이번분기" ? getQuarterDate(day) : getMonthDate(day);
-
-      const existing = await queryWorkLogs({
-        search: tmpl.name,
-        dateFrom: date,
-        dateTo: date,
-      });
+    const dates = getTemplateDates(tmpl);
+    for (const date of dates) {
+      const existing = await queryWorkLogs({ search: tmpl.name, dateFrom: date, dateTo: date });
       if (existing.some((log) => log.title === tmpl.name)) {
         skipped.push(tmpl.name);
         continue;
       }
-
-      const formData: WorkLogFormData = {
-        title: tmpl.name,
-        date,
-        projects: tmpl.defaultProjects,
-        status: tmpl.defaultStatus,
-        content: tmpl.content,
-        tags: tmpl.defaultTags,
-        hours: tmpl.defaultHours,
-        link: null,
-      };
-
-      await createWorkLog(formData, { inputSource: "웹" });
+      await createWorkLog(
+        { title: tmpl.name, date, projects: tmpl.defaultProjects, status: tmpl.defaultStatus, content: tmpl.content, tags: tmpl.defaultTags, hours: tmpl.defaultHours, link: null },
+        { inputSource: "웹" }
+      );
       titles.push(tmpl.name);
     }
   }
@@ -236,12 +305,30 @@ export async function generateWorkLogs(
   return { generated: titles.length, titles, skipped };
 }
 
+async function autoGenerate(
+  tmplList: import("./types").RecurringTemplate[],
+  titles: string[],
+  skipped: string[]
+) {
+  for (const tmpl of tmplList) {
+    const dates = getTemplateDates(tmpl);
+    for (const date of dates) {
+      const existing = await queryWorkLogs({ search: tmpl.name, dateFrom: date, dateTo: date });
+      if (existing.some((log) => log.title === tmpl.name)) {
+        skipped.push(tmpl.name);
+        continue;
+      }
+      await createWorkLog(
+        { title: tmpl.name, date, projects: tmpl.defaultProjects, status: tmpl.defaultStatus, content: tmpl.content, tags: tmpl.defaultTags, hours: tmpl.defaultHours, link: null },
+        { inputSource: "웹" }
+      );
+      titles.push(tmpl.name);
+    }
+  }
+}
+
 export async function generateAutoWorkLogs(): Promise<{ generated: number; titles: string[]; skipped: string[] }> {
   const templates = (await getAllTemplates()).filter((t) => t.active && t.autoGenerate);
-
-  const weeklyTemplates = templates.filter((t) => t.frequency === "매주");
-  const monthlyTemplates = templates.filter((t) => t.frequency === "매월");
-  const quarterlyTemplates = templates.filter((t) => t.frequency === "매분기");
 
   const titles: string[] = [];
   const skipped: string[] = [];
@@ -249,61 +336,39 @@ export async function generateAutoWorkLogs(): Promise<{ generated: number; title
   const now = getKSTNow();
   const isFirstOfMonth = now.getDate() === 1;
   const isQuarterStart = isFirstOfMonth && [0, 3, 6, 9].includes(now.getMonth());
+  const isHalfStart = isFirstOfMonth && [0, 6].includes(now.getMonth());
+  const isOddWeek = getISOWeekNumber(now) % 2 === 1;
 
-  for (const tmpl of weeklyTemplates) {
-    for (const day of tmpl.dayValues) {
-      const date = getWeekDate(day);
-      const existing = await queryWorkLogs({ search: tmpl.name, dateFrom: date, dateTo: date });
-      if (existing.some((log) => log.title === tmpl.name)) {
-        skipped.push(tmpl.name);
-        continue;
-      }
-      await createWorkLog({
-        title: tmpl.name, date, projects: tmpl.defaultProjects,
-        status: tmpl.defaultStatus, content: tmpl.content,
-        tags: tmpl.defaultTags, hours: tmpl.defaultHours, link: null,
-      }, { inputSource: "웹" });
-      titles.push(tmpl.name);
-    }
+  await autoGenerate(templates.filter((t) => t.frequency === "매일"), titles, skipped);
+  await autoGenerate(templates.filter((t) => t.frequency === "매주"), titles, skipped);
+
+  if (isOddWeek) {
+    await autoGenerate(templates.filter((t) => t.frequency === "격주"), titles, skipped);
   }
 
   if (isFirstOfMonth) {
-    for (const tmpl of monthlyTemplates) {
-      for (const day of tmpl.dayValues) {
-        const date = getMonthDate(day);
-        const existing = await queryWorkLogs({ search: tmpl.name, dateFrom: date, dateTo: date });
-        if (existing.some((log) => log.title === tmpl.name)) {
-          skipped.push(tmpl.name);
-          continue;
-        }
-        await createWorkLog({
-          title: tmpl.name, date, projects: tmpl.defaultProjects,
-          status: tmpl.defaultStatus, content: tmpl.content,
-          tags: tmpl.defaultTags, hours: tmpl.defaultHours, link: null,
-        }, { inputSource: "웹" });
-        titles.push(tmpl.name);
-      }
-    }
+    await autoGenerate(templates.filter((t) => t.frequency === "매월"), titles, skipped);
+    await autoGenerate(templates.filter((t) => t.frequency === "매월N번째요일"), titles, skipped);
   }
 
   if (isQuarterStart) {
-    for (const tmpl of quarterlyTemplates) {
-      for (const day of tmpl.dayValues) {
-        const date = getQuarterDate(day);
-        const existing = await queryWorkLogs({ search: tmpl.name, dateFrom: date, dateTo: date });
-        if (existing.some((log) => log.title === tmpl.name)) {
-          skipped.push(tmpl.name);
-          continue;
-        }
-        await createWorkLog({
-          title: tmpl.name, date, projects: tmpl.defaultProjects,
-          status: tmpl.defaultStatus, content: tmpl.content,
-          tags: tmpl.defaultTags, hours: tmpl.defaultHours, link: null,
-        }, { inputSource: "웹" });
-        titles.push(tmpl.name);
-      }
-    }
+    await autoGenerate(templates.filter((t) => t.frequency === "매분기"), titles, skipped);
   }
+
+  if (isHalfStart) {
+    await autoGenerate(templates.filter((t) => t.frequency === "반기"), titles, skipped);
+  }
+
+  // 매년: 오늘 날짜가 템플릿의 월/일과 일치하는 경우에만 생성
+  const annualTemplates = templates.filter((t) => {
+    if (t.frequency !== "매년") return false;
+    const month = t.dayValues[0] ?? 1;
+    const day = t.dayValues[1] ?? 1;
+    const lastDay = new Date(now.getFullYear(), month, 0).getDate();
+    const targetDay = day === 0 ? lastDay : Math.min(day, lastDay);
+    return now.getMonth() + 1 === month && now.getDate() === targetDay;
+  });
+  await autoGenerate(annualTemplates, titles, skipped);
 
   return { generated: titles.length, titles, skipped };
 }

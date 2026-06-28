@@ -28,12 +28,27 @@ import { DeleteTemplateDialog } from "./delete-template-dialog";
 import type { RecurringTemplate } from "@/lib/types";
 
 function formatDay(template: RecurringTemplate): string {
-  if (template.frequency === "매주") {
-    return template.dayValues
-      .map((d) => (DAY_OF_WEEK_LABELS[d] || `${d}`).replace("요일", ""))
-      .join(", ");
+  switch (template.frequency) {
+    case "매일":
+      return "";
+    case "매주":
+    case "격주":
+      return template.dayValues
+        .map((d) => (DAY_OF_WEEK_LABELS[d] || `${d}`).replace("요일", ""))
+        .join(", ");
+    case "매월N번째요일": {
+      const ordinals: Record<number, string> = { 1: "첫째", 2: "둘째", 3: "셋째", 4: "넷째", 5: "마지막" };
+      const weekdays: Record<number, string> = { 1: "월", 2: "화", 3: "수", 4: "목", 5: "금" };
+      return `${ordinals[template.dayValues[0]] ?? template.dayValues[0]}주 ${weekdays[template.dayValues[1]] ?? template.dayValues[1]}요일`;
+    }
+    case "매년": {
+      const month = template.dayValues[0] ?? 1;
+      const day = template.dayValues[1] ?? 1;
+      return `${month}월 ${day === 0 ? "말일" : `${day}일`}`;
+    }
+    default:
+      return template.dayValues.map((d) => d === 0 ? "말일" : `${d}일`).join(", ");
   }
-  return template.dayValues.map((d) => d === 0 ? "말일" : `${d}일`).join(", ");
 }
 
 export function TemplateTable({
@@ -68,7 +83,12 @@ export function TemplateTable({
   const handleGenerateSingle = async (template: RecurringTemplate) => {
     setGeneratingId(template.id);
     try {
-      const mode = template.frequency === "매주" ? "이번주" : template.frequency === "매분기" ? "이번분기" : "이번달";
+      const freqModeMap: Record<string, string> = {
+        매일: "오늘", 매주: "이번주", 격주: "이번주",
+        매월: "이번달", "매월N번째요일": "이번달",
+        매분기: "이번분기", 반기: "이번반기", 매년: "올해",
+      };
+      const mode = freqModeMap[template.frequency] ?? "이번달";
       const res = await fetch("/api/templates/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -85,7 +85,7 @@ export const TRACK_STATUS_COLORS: Record<TrackStatus, string> = {
   "보류": "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
 };
 
-export const FREQUENCIES: Frequency[] = ["매주", "매월", "매분기"];
+export const FREQUENCIES: Frequency[] = ["매일", "매주", "격주", "매월", "매월N번째요일", "매분기", "반기", "매년"];
 
 export const PRESET_CATEGORIES: PresetCategory[] = ["정기 보고", "정산/회계", "회의", "관리 업무"];
 

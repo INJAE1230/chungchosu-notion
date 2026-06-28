@@ -142,11 +142,11 @@ export function TemplateFormDialog({
                 value={form.frequency}
                 onValueChange={(v) => {
                   const freq = v as Frequency;
-                  setForm({
-                    ...form,
-                    frequency: freq,
-                    dayValues: [1],
-                  });
+                  const defaultDayValues: Record<Frequency, number[]> = {
+                    매일: [0], 매주: [1], 격주: [1], 매월: [1],
+                    "매월N번째요일": [1, 1], 매분기: [1], 반기: [1], 매년: [1, 1],
+                  };
+                  setForm({ ...form, frequency: freq, dayValues: defaultDayValues[freq] });
                 }}
               >
                 <SelectTrigger>
@@ -162,67 +162,161 @@ export function TemplateFormDialog({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                {form.frequency === "매주" ? "요일 (복수 선택 가능)" : "날짜"}
-              </label>
-              {form.frequency === "매분기" && (
-                <p className="text-xs text-muted-foreground">
-                  분기 시작월(1·4·7·10월)에 해당 날짜로 생성됩니다
-                </p>
-              )}
-              {form.frequency === "매주" ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(DAY_OF_WEEK_LABELS).map(([val, label]) => {
-                    const day = Number(val);
-                    const isWeekend = day === 0 || day === 6;
-                    const selected = form.dayValues.includes(day);
-                    return (
-                      <Badge
-                        key={val}
-                        variant={selected ? "default" : "outline"}
-                        className={`cursor-pointer select-none px-3 py-1.5 text-xs ${
-                          isWeekend
-                            ? "opacity-40 line-through"
-                            : selected ? "" : "text-muted-foreground"
-                        }`}
-                        onClick={() => {
-                          if (isWeekend) {
-                            toast.info("토/일은 휴무일입니다. 주말 출근 시 수동으로 추가하세요.");
-                            return;
-                          }
-                          const next = selected
-                            ? form.dayValues.filter((d) => d !== day)
-                            : [...form.dayValues, day].sort((a, b) => a - b);
-                          if (next.length > 0) setForm({ ...form, dayValues: next });
-                        }}
-                      >
-                        {(label as string).replace("요일", "")}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              ) : (
-                <Select
-                  value={String(form.dayValues[0])}
-                  onValueChange={(v) =>
-                    setForm({ ...form, dayValues: [Number(v)] })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                      <SelectItem key={d} value={String(d)}>
-                        {d}일
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="0">말일 (매월 마지막 날)</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
+            {form.frequency === "매일" ? (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">날짜 설정</label>
+                <p className="text-sm text-muted-foreground pt-1">매일 자동으로 생성됩니다</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  {form.frequency === "매주" || form.frequency === "격주"
+                    ? "요일 (복수 선택 가능)"
+                    : form.frequency === "매년"
+                      ? "월 / 일"
+                      : form.frequency === "매월N번째요일"
+                        ? "N번째 요일"
+                        : "날짜"}
+                </label>
+                {form.frequency === "매분기" && (
+                  <p className="text-xs text-muted-foreground">
+                    분기 시작월(1·4·7·10월)에 해당 날짜로 생성됩니다
+                  </p>
+                )}
+                {form.frequency === "반기" && (
+                  <p className="text-xs text-muted-foreground">
+                    반기 시작월(1·7월)에 해당 날짜로 생성됩니다
+                  </p>
+                )}
+                {form.frequency === "격주" && (
+                  <p className="text-xs text-muted-foreground">
+                    홀수 주차(1·3·5·...)에 자동 생성됩니다
+                  </p>
+                )}
+                {(form.frequency === "매주" || form.frequency === "격주") ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(DAY_OF_WEEK_LABELS).map(([val, label]) => {
+                      const day = Number(val);
+                      const isWeekend = day === 0 || day === 6;
+                      const selected = form.dayValues.includes(day);
+                      return (
+                        <Badge
+                          key={val}
+                          variant={selected ? "default" : "outline"}
+                          className={`cursor-pointer select-none px-3 py-1.5 text-xs ${
+                            isWeekend
+                              ? "opacity-40 line-through"
+                              : selected ? "" : "text-muted-foreground"
+                          }`}
+                          onClick={() => {
+                            if (isWeekend) {
+                              toast.info("토/일은 휴무일입니다. 주말 출근 시 수동으로 추가하세요.");
+                              return;
+                            }
+                            const next = selected
+                              ? form.dayValues.filter((d) => d !== day)
+                              : [...form.dayValues, day].sort((a, b) => a - b);
+                            if (next.length > 0) setForm({ ...form, dayValues: next });
+                          }}
+                        >
+                          {(label as string).replace("요일", "")}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                ) : form.frequency === "매년" ? (
+                  <div className="flex gap-2">
+                    <Select
+                      value={String(form.dayValues[0] ?? 1)}
+                      onValueChange={(v) =>
+                        setForm({ ...form, dayValues: [Number(v), form.dayValues[1] ?? 1] })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                          <SelectItem key={m} value={String(m)}>{m}월</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={String(form.dayValues[1] ?? 1)}
+                      onValueChange={(v) =>
+                        setForm({ ...form, dayValues: [form.dayValues[0] ?? 1, Number(v)] })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                          <SelectItem key={d} value={String(d)}>{d}일</SelectItem>
+                        ))}
+                        <SelectItem value="0">말일</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : form.frequency === "매월N번째요일" ? (
+                  <div className="flex gap-2">
+                    <Select
+                      value={String(form.dayValues[0] ?? 1)}
+                      onValueChange={(v) =>
+                        setForm({ ...form, dayValues: [Number(v), form.dayValues[1] ?? 1] })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">첫째 주</SelectItem>
+                        <SelectItem value="2">둘째 주</SelectItem>
+                        <SelectItem value="3">셋째 주</SelectItem>
+                        <SelectItem value="4">넷째 주</SelectItem>
+                        <SelectItem value="5">마지막 주</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={String(form.dayValues[1] ?? 1)}
+                      onValueChange={(v) =>
+                        setForm({ ...form, dayValues: [form.dayValues[0] ?? 1, Number(v)] })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">월요일</SelectItem>
+                        <SelectItem value="2">화요일</SelectItem>
+                        <SelectItem value="3">수요일</SelectItem>
+                        <SelectItem value="4">목요일</SelectItem>
+                        <SelectItem value="5">금요일</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <Select
+                    value={String(form.dayValues[0])}
+                    onValueChange={(v) =>
+                      setForm({ ...form, dayValues: [Number(v)] })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                        <SelectItem key={d} value={String(d)}>
+                          {d}일
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="0">말일 (매월 마지막 날)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -316,11 +410,16 @@ export function TemplateFormDialog({
             <div>
               <p className="text-sm font-medium">자동 생성</p>
               <p className="text-xs text-muted-foreground">
-                {form.frequency === "매주"
-                  ? "매주 월요일에 해당 주 업무를 자동 생성합니다"
-                  : form.frequency === "매분기"
-                    ? "분기 시작월(1·4·7·10월) 1일에 자동 생성합니다"
-                    : "매월 1일에 해당 월 업무를 자동 생성합니다"}
+                {{
+                  매일: "매일 업무를 자동 생성합니다",
+                  매주: "매주 월요일에 해당 주 업무를 자동 생성합니다",
+                  격주: "홀수 주차 월요일에 업무를 자동 생성합니다",
+                  매월: "매월 1일에 해당 월 업무를 자동 생성합니다",
+                  "매월N번째요일": "매월 1일에 해당 N번째 요일 업무를 자동 생성합니다",
+                  매분기: "분기 시작월(1·4·7·10월) 1일에 자동 생성합니다",
+                  반기: "반기 시작월(1·7월) 1일에 자동 생성합니다",
+                  매년: "해당 날짜에 연 1회 자동 생성합니다",
+                }[form.frequency]}
               </p>
             </div>
             <button
