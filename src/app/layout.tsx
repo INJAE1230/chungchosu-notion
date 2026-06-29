@@ -40,7 +40,7 @@ export default async function RootLayout({
               <DesktopSidebar />
               <div className="flex flex-1 flex-col">
                 <MobileHeader />
-                <main className="flex-1 px-4 py-8 pb-20 md:px-10 md:pb-8">
+                <main className="flex-1 px-4 py-6 pb-28 md:px-10 md:py-8 md:pb-8">
                   <div className="mx-auto max-w-5xl animate-fade-in-up">
                     {children}
                   </div>

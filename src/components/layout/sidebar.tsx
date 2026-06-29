@@ -144,15 +144,42 @@ export function DesktopSidebar() {
   );
 }
 
+const PAGE_TITLES: Record<string, string> = {
+  "/": "대시보드",
+  "/logs": "업무 목록",
+  "/logs/new": "업무 추가",
+  "/board": "칸반 보드",
+  "/calendar": "캘린더",
+  "/templates": "반복 템플릿",
+  "/tracks": "트랙",
+  "/review": "주간 리뷰",
+  "/analytics": "통계 분석",
+  "/achievements": "성과 관리",
+  "/reports": "보고서",
+  "/entities": "법인 통합",
+  "/hr": "인사/연차",
+  "/payroll": "급여 관리",
+};
+
+function getPageTitle(pathname: string): string {
+  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
+  if (pathname.startsWith("/logs/") && pathname.endsWith("/edit")) return "업무 수정";
+  if (pathname.startsWith("/logs/")) return "업무 상세";
+  return "업무일지";
+}
+
 export function MobileHeader() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const title = getPageTitle(pathname);
 
   return (
-    <header className="flex h-12 items-center gap-3 border-b bg-card px-4 md:hidden">
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 px-3 md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Menu className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-9 w-9">
+            <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-56 p-0">
@@ -160,7 +187,18 @@ export function MobileHeader() {
           <NavContent onNavigate={() => setOpen(false)} />
         </SheetContent>
       </Sheet>
-      <span className="text-sm font-semibold">업무일지</span>
+
+      <span className="text-[15px] font-semibold absolute left-1/2 -translate-x-1/2">{title}</span>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9"
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      >
+        <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      </Button>
     </header>
   );
 }
