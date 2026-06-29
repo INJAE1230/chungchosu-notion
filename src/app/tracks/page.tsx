@@ -4,7 +4,12 @@ import { TrackBoard } from "@/components/tracks/track-board";
 
 export const dynamic = "force-dynamic";
 
-export default async function TracksPage() {
+export default async function TracksPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string>>;
+}) {
+  const params = await searchParams;
   const [tracks, allLogs] = await Promise.all([getAllTracks(), getAllWorkLogs()]);
-  return <TrackBoard tracks={tracks} allLogs={allLogs} />;
+  return <TrackBoard tracks={tracks} allLogs={allLogs} initialTrackId={params.track} />;
 }

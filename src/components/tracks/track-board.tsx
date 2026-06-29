@@ -56,6 +56,7 @@ import { MemoPreview } from "@/components/memo/memo-preview";
 interface TrackBoardProps {
   tracks: Track[];
   allLogs: WorkLog[];
+  initialTrackId?: string;
 }
 
 const ENTITY_COLORS: Record<string, string> = {
@@ -101,10 +102,12 @@ function emptyForm(): TrackFormData {
   return { title: "", entity: null, startDate: null, targetDate: null, status: "계획", description: null };
 }
 
-export function TrackBoard({ tracks: initialTracks, allLogs }: TrackBoardProps) {
+export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: TrackBoardProps) {
   const router = useRouter();
   const [tracks, setTracks] = useState<Track[]>(initialTracks);
-  const [selected, setSelected] = useState<Track | null>(null);
+  const [selected, setSelected] = useState<Track | null>(() =>
+    initialTrackId ? (initialTracks.find((t) => t.id === initialTrackId) ?? null) : null
+  );
   const [showForm, setShowForm] = useState(false);
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [form, setForm] = useState<TrackFormData>(emptyForm());
@@ -291,7 +294,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs }: TrackBoardProps) 
             </h1>
             <p className="text-sm text-muted-foreground">장기 업무 흐름을 관리하세요</p>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5 self-start" onClick={() => { setSelected(null); setStatusFilter("all"); setShowAllLogs(false); }}>
+          <Button variant="outline" size="sm" className="gap-1.5 self-start" onClick={() => { setSelected(null); setStatusFilter("all"); setShowAllLogs(false); router.replace("/tracks", { scroll: false }); }}>
             <ArrowLeft className="h-4 w-4" /> 전체 트랙
           </Button>
         </div>
@@ -493,7 +496,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs }: TrackBoardProps) 
                     ) : (
                       // 일반 row
                       <>
-                        <Link href={`/logs/${log.id}?from=/tracks`} className="flex-1 min-w-0 group/link">
+                        <Link href={`/logs/${log.id}?from=${encodeURIComponent(`/tracks?track=${selected.id}`)}`} className="flex-1 min-w-0 group/link">
                           <p className="text-sm truncate group-hover/link:text-violet-600 dark:group-hover/link:text-violet-400 transition-colors">
                             {log.title}
                           </p>
@@ -676,7 +679,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs }: TrackBoardProps) 
                 key={track.id}
                 className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.01] border-l-4 group relative"
                 style={{ borderLeftColor: color }}
-                onClick={() => { setSelected(track); setStatusFilter("all"); setShowAllLogs(false); }}
+                onClick={() => { setSelected(track); setStatusFilter("all"); setShowAllLogs(false); router.replace(`/tracks?track=${track.id}`, { scroll: false }); }}
               >
                 <CardContent className="px-5 py-4">
                   <div className="flex items-start justify-between mb-2 gap-2">

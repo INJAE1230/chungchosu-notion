@@ -49,8 +49,9 @@ export default async function LogDetailPage({
 }) {
   const { id } = await params;
   const { from } = await searchParams;
-  const backHref = from && BACK_LABELS[from] ? from : "/logs";
-  const backLabel = BACK_LABELS[from || ""] || "목록";
+  const isTracksFrom = from?.startsWith("/tracks");
+  const backHref = from && (BACK_LABELS[from] || isTracksFrom) ? from : "/logs";
+  const backLabel = isTracksFrom ? "트랙" : (BACK_LABELS[from || ""] || "목록");
 
   let log;
   try {
