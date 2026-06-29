@@ -77,7 +77,7 @@ export function KanbanBoard({ initialLogs }: KanbanBoardProps) {
   const [activeLog, setActiveLog] = useState<WorkLog | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [filterProject, setFilterProject] = useState<Project | "all">("all");
-  const [hideTrack, setHideTrack] = useState(true);
+  const [trackFilter, setTrackFilter] = useState<"all" | "own" | "track">("own");
 
   useEffect(() => {
     setLogs(initialLogs);
@@ -85,7 +85,11 @@ export function KanbanBoard({ initialLogs }: KanbanBoardProps) {
 
   const filteredLogs = logs
     .filter((l) => filterProject === "all" || l.projects.includes(filterProject))
-    .filter((l) => !hideTrack || !l.trackId);
+    .filter((l) => {
+      if (trackFilter === "own") return !l.trackId;
+      if (trackFilter === "track") return !!l.trackId;
+      return true;
+    });
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -143,15 +147,26 @@ export function KanbanBoard({ initialLogs }: KanbanBoardProps) {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={() => setHideTrack((v) => !v)}
+            onClick={() => setTrackFilter((v) => v === "own" ? "all" : "own")}
             className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-md border text-sm transition-colors select-none ${
-              hideTrack
+              trackFilter === "own"
                 ? "bg-violet-100 border-violet-300 text-violet-700 dark:bg-violet-900/40 dark:border-violet-600 dark:text-violet-300"
                 : "border-dashed text-muted-foreground hover:text-foreground hover:border-solid"
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
-            트랙 연결 숨기기
+            트랙 숨기기
+          </button>
+          <button
+            onClick={() => setTrackFilter((v) => v === "track" ? "all" : "track")}
+            className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-md border text-sm transition-colors select-none ${
+              trackFilter === "track"
+                ? "bg-violet-100 border-violet-300 text-violet-700 dark:bg-violet-900/40 dark:border-violet-600 dark:text-violet-300"
+                : "border-dashed text-muted-foreground hover:text-foreground hover:border-solid"
+            }`}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            트랙만 보기
           </button>
           <Select value={filterProject} onValueChange={(v) => setFilterProject(v as Project | "all")}>
             <SelectTrigger className="w-[140px] h-9">
