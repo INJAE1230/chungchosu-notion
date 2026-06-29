@@ -31,6 +31,7 @@ import {
   Sparkles,
   MessageSquare,
   Loader2,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { toastError } from "@/lib/toast-utils";
@@ -519,12 +520,36 @@ export function TrackBoard({ tracks: initialTracks, allLogs }: TrackBoardProps) 
               <div className="p-5 space-y-4">
                 {!kakaoEntries ? (
                   <>
-                    <textarea
-                      className="w-full min-h-[180px] rounded-lg border bg-background px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-400"
-                      placeholder={"카카오톡 대화 내용을 여기에 붙여넣으세요.\n\n예:\n청초수 오늘 발주 완료했습니다 3시간 걸렸어요\n다음주 목요일 바이어 미팅 예정\nJS코퍼 세금계산서 처리 완료"}
-                      value={kakaoText}
-                      onChange={(e) => setKakaoText(e.target.value)}
-                    />
+                    <div className="relative">
+                      <textarea
+                        className="w-full min-h-[180px] rounded-lg border bg-background px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-400"
+                        placeholder={"카카오톡 대화 내용을 여기에 붙여넣거나 txt 파일을 업로드하세요.\n\n예:\n청초수 오늘 발주 완료했습니다 3시간 걸렸어요\n다음주 목요일 바이어 미팅 예정\nJS코퍼 세금계산서 처리 완료"}
+                        value={kakaoText}
+                        onChange={(e) => setKakaoText(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-foreground border rounded-md px-3 py-2 transition-colors hover:bg-accent">
+                        <FileText className="h-3.5 w-3.5" />
+                        txt 파일 불러오기
+                        <input
+                          type="file"
+                          accept=".txt"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              setKakaoText((ev.target?.result as string) || "");
+                            };
+                            reader.readAsText(file, "utf-8");
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                      <span className="text-xs text-muted-foreground">카카오톡 대화 내보내기(.txt) 지원</span>
+                    </div>
                     <Button
                       className="w-full gap-2"
                       onClick={handleKakaoParse}
