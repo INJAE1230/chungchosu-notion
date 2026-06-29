@@ -22,6 +22,7 @@ import {
   Building2,
   Wallet,
   Layers,
+  Smartphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,6 +70,12 @@ const NAV_GROUPS = [
       { href: "/entities", label: "법인 통합", icon: Building2 },
       { href: "/hr", label: "인사/연차", icon: Users },
       { href: "/payroll", label: "급여 관리", icon: Wallet },
+    ],
+  },
+  {
+    label: "앱",
+    items: [
+      { href: "/install", label: "앱 설치", icon: Smartphone },
     ],
   },
 ];
