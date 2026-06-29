@@ -115,13 +115,6 @@ function buildFilter(filters: WorkLogFilters) {
       ],
     });
   }
-  if (filters.hideTrackLinked) {
-    conditions.push({
-      property: "트랙",
-      relation: { is_empty: true },
-    });
-  }
-
   if (conditions.length === 0) return undefined;
   if (conditions.length === 1) return conditions[0];
   return { and: conditions };
@@ -136,7 +129,11 @@ export async function queryWorkLogs(
     [{ property: "날짜", direction: "descending" }],
     filter as Record<string, unknown> | undefined
   );
-  return pages.map(mapPageToWorkLog);
+  let logs = pages.map(mapPageToWorkLog);
+  if (filters?.hideTrackLinked) {
+    logs = logs.filter((l) => !l.trackId);
+  }
+  return logs;
 }
 
 export async function getAllWorkLogs(): Promise<WorkLog[]> {

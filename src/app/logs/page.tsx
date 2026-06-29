@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { queryWorkLogs } from "@/lib/notion-service";
+import { getAllTracks } from "@/lib/track-service";
 import { LogTable } from "@/components/logs/log-table";
 import { LogFilters } from "@/components/logs/log-filters";
 import { CsvDownload } from "@/components/logs/csv-download";
@@ -26,9 +27,10 @@ async function LogList({ searchParams }: { searchParams: Record<string, string> 
   if (searchParams.search) filters.search = searchParams.search;
   if (searchParams.hideTrack === "1") filters.hideTrackLinked = true;
 
-  const logs = await queryWorkLogs(
-    Object.keys(filters).length > 0 ? filters : undefined
-  );
+  const [logs, tracks] = await Promise.all([
+    queryWorkLogs(Object.keys(filters).length > 0 ? filters : undefined),
+    getAllTracks(),
+  ]);
 
   return (
     <>
@@ -38,7 +40,7 @@ async function LogList({ searchParams }: { searchParams: Record<string, string> 
         </p>
         <CsvDownload logs={logs} />
       </div>
-      <LogTable logs={logs} />
+      <LogTable logs={logs} tracks={tracks} />
     </>
   );
 }

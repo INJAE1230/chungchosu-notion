@@ -26,12 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, X, Layers } from "lucide-react";
 import { STATUS_COLORS, PROJECT_COLORS, TAG_COLORS, PRIORITY_COLORS, STATUSES } from "@/lib/constants";
 import { DeleteDialog } from "./delete-dialog";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { WorkLog, Status } from "@/lib/types";
+import type { WorkLog, Status, Track } from "@/lib/types";
 
 const DAY_SHORT = ["일", "월", "화", "수", "목", "금", "토"];
 function formatDateShort(dateStr: string) {
@@ -39,7 +39,8 @@ function formatDateShort(dateStr: string) {
   return `${d.getMonth() + 1}/${d.getDate()}(${DAY_SHORT[d.getDay()]})`;
 }
 
-export function LogTable({ logs: initialLogs }: { logs: WorkLog[] }) {
+export function LogTable({ logs: initialLogs, tracks = [] }: { logs: WorkLog[]; tracks?: Track[] }) {
+  const trackMap = new Map(tracks.map((t) => [t.id, t.title]));
   const router = useRouter();
   const [logs, setLogs] = useState(initialLogs);
   const [deleteTarget, setDeleteTarget] = useState<WorkLog | null>(null);
@@ -187,6 +188,12 @@ export function LogTable({ logs: initialLogs }: { logs: WorkLog[] }) {
               {log.tags.length > 1 && (
                 <span className="text-xs text-muted-foreground">+{log.tags.length - 1}</span>
               )}
+              {log.trackId && (
+                <Badge variant="secondary" className="text-[10px] bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 gap-1 shrink-0">
+                  <Layers className="h-2.5 w-2.5" />
+                  {trackMap.get(log.trackId) ?? "트랙"}
+                </Badge>
+              )}
               {log.hours !== null && (
                 <span className="text-xs text-muted-foreground ml-auto">{log.hours}h</span>
               )}
@@ -233,6 +240,14 @@ export function LogTable({ logs: initialLogs }: { logs: WorkLog[] }) {
                   <Link href={`/logs/${log.id}`} className="hover:text-primary hover:underline">
                     {log.title}
                   </Link>
+                  {log.trackId && (
+                    <div className="mt-0.5">
+                      <Badge variant="secondary" className="text-[10px] bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 gap-1">
+                        <Layers className="h-2.5 w-2.5" />
+                        {trackMap.get(log.trackId) ?? "트랙"}
+                      </Badge>
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">{formatDateShort(log.date)}</TableCell>
                 <TableCell>
