@@ -1,21 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteWorkLog } from "@/lib/notion-service";
 
-const BULK_DELETE_PASSWORD = process.env.BULK_DELETE_PASSWORD ?? "";
-
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: trackId } = await params;
-    const { password, logIds } = await request.json();
+    const { logIds } = await request.json();
 
     if (!trackId) {
       return NextResponse.json({ error: "트랙 ID가 필요합니다" }, { status: 400 });
-    }
-    if (password !== BULK_DELETE_PASSWORD) {
-      return NextResponse.json({ error: "비밀번호가 틀렸습니다" }, { status: 403 });
     }
     if (!Array.isArray(logIds) || logIds.length === 0) {
       return NextResponse.json({ error: "삭제할 업무가 없습니다" }, { status: 400 });

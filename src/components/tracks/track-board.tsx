@@ -145,9 +145,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
 
   // 전체 삭제
   const [showBulkDelete, setShowBulkDelete] = useState(false);
-  const [bulkDeletePw, setBulkDeletePw] = useState("");
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
-  const [bulkDeleteError, setBulkDeleteError] = useState("");
 
   const trackLogs = (track: Track) =>
     allLogs.filter((l) => l.trackId === track.id && !deletedLogIds.has(l.id));
@@ -306,24 +304,19 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
 
   async function handleBulkDelete(track: Track, logs: ReturnType<typeof trackLogs>) {
     setBulkDeleteLoading(true);
-    setBulkDeleteError("");
     try {
       const res = await fetch(`/api/tracks/${track.id}/logs`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: bulkDeletePw, logIds: logs.map((l) => l.id) }),
+        body: JSON.stringify({ logIds: logs.map((l) => l.id) }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setBulkDeleteError(data.error ?? "오류가 발생했습니다");
-        return;
-      }
+      if (!res.ok) throw new Error(data.error);
       setDeletedLogIds((prev) => new Set([...prev, ...logs.map((l) => l.id)]));
       setShowBulkDelete(false);
-      setBulkDeletePw("");
       toast.success(`${data.deleted}건의 업무가 삭제되었습니다`);
     } catch {
-      setBulkDeleteError("삭제에 실패했습니다");
+      toast.error("삭제에 실패했습니다");
     } finally {
       setBulkDeleteLoading(false);
     }
@@ -674,26 +667,13 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="p-5 space-y-4">
+              <div className="px-5 py-4">
                 <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">{selected.title}</span>의 업무 {logs.length}건을 모두 삭제합니다.<br />
-                  이 작업은 되돌릴 수 없습니다.
+                  <span className="font-medium text-foreground">{selected.title}</span>의 업무{" "}
+                  <span className="font-medium text-foreground">{logs.length}건</span>을 모두 삭제합니다.
+                  <br />
+                  <span className="text-xs">이 작업은 되돌릴 수 없습니다.</span>
                 </p>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium">비밀번호</label>
-                  <Input
-                    type="password"
-                    placeholder="비밀번호 입력"
-                    value={bulkDeletePw}
-                    onChange={(e) => { setBulkDeletePw(e.target.value); setBulkDeleteError(""); }}
-                    onKeyDown={(e) => e.key === "Enter" && !bulkDeleteLoading && handleBulkDelete(selected, logs)}
-                    autoFocus
-                    className="h-9 text-sm"
-                  />
-                  {bulkDeleteError && (
-                    <p className="text-xs text-red-500">{bulkDeleteError}</p>
-                  )}
-                </div>
               </div>
               <div className="flex gap-2 px-5 pb-5">
                 <Button variant="outline" className="flex-1" onClick={() => setShowBulkDelete(false)}>취소</Button>
@@ -701,7 +681,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
                   variant="destructive"
                   className="flex-1"
                   onClick={() => handleBulkDelete(selected, logs)}
-                  disabled={bulkDeleteLoading || !bulkDeletePw}
+                  disabled={bulkDeleteLoading}
                 >
                   {bulkDeleteLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
                   {bulkDeleteLoading ? "삭제 중..." : "전체 삭제"}
