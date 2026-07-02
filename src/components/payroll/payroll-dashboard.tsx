@@ -49,6 +49,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Separator } from "@/components/ui/separator";
 import type { PayrollRecord, PayrollFormData } from "@/lib/payroll-types";
 
@@ -177,6 +178,7 @@ export function PayrollDashboard({
   const [formData, setFormData] = useState<PayrollFormData>({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [printRecord, setPrintRecord] = useState<PayrollRecord | null>(null);
   const [showTaxSim, setShowTaxSim] = useState(false);
@@ -365,7 +367,6 @@ export function PayrollDashboard({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("삭제하시겠습니까?")) return;
     try {
       const res = await fetch(`/api/payroll/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
@@ -1044,7 +1045,7 @@ export function PayrollDashboard({
                             variant="ghost"
                             size="sm"
                             className="text-red-500 hover:text-red-600"
-                            onClick={() => handleDelete(r.id)}
+                            onClick={() => setDeleteId(r.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -1193,6 +1194,16 @@ export function PayrollDashboard({
           <TaxSimulator records={sorted} />
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(o) => { if (!o) setDeleteId(null); }}
+        title="급여 기록을 삭제할까요?"
+        description="이 작업은 되돌릴 수 없습니다."
+        confirmLabel="삭제"
+        destructive
+        onConfirm={() => { if (deleteId) handleDelete(deleteId); setDeleteId(null); }}
+      />
     </div>
   );
 }

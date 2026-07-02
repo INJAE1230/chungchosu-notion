@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { toastError } from "@/lib/toast-utils";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   EMPLOYMENT_STATUS_COLORS,
   ATTENDANCE_CATEGORY_COLORS,
@@ -55,6 +56,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [showAttendanceForm, setShowAttendanceForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [attendanceDeleteTarget, setAttendanceDeleteTarget] = useState<AttendanceRecord | null>(null);
   const [search, setSearch] = useState("");
   const [attendanceView, setAttendanceView] = useState<"list" | "calendar">("calendar");
   const [calendarFormDate, setCalendarFormDate] = useState<string | null>(null);
@@ -446,11 +448,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
                 setCalendarFormDate(date);
                 setCalendarFormEmployeeId(employeeId);
               }}
-              onDeleteClick={(record) => {
-                if (confirm(`${getEmployeeName(record.employeeId)} ${record.date} ${record.category} 기록을 삭제할까요?`)) {
-                  handleDeleteAttendance(record);
-                }
-              }}
+              onDeleteClick={(record) => setAttendanceDeleteTarget(record)}
             />
           </CardContent>
         </Card>
@@ -492,7 +490,7 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
                         {record.note && <span>· {record.note.replace(/^\[(연차|정휴무)차감\]\s*/, "")}</span>}
                       </div>
                     </div>
-                    <Button variant="destructive" size="sm" className="h-7 text-xs shrink-0" onClick={() => handleDeleteAttendance(record)} disabled={deletingId === record.id}>
+                    <Button variant="destructive" size="sm" className="h-7 text-xs shrink-0" onClick={() => setAttendanceDeleteTarget(record)} disabled={deletingId === record.id}>
                       {deletingId === record.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                     </Button>
                   </div>
@@ -681,6 +679,23 @@ export function HrDashboard({ initialEmployees, initialAttendance }: HrDashboard
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!attendanceDeleteTarget}
+        onOpenChange={(o) => { if (!o) setAttendanceDeleteTarget(null); }}
+        title="근태 기록을 삭제할까요?"
+        description={
+          attendanceDeleteTarget
+            ? `${getEmployeeName(attendanceDeleteTarget.employeeId)} · ${attendanceDeleteTarget.date} · ${attendanceDeleteTarget.category} 기록이 삭제됩니다.`
+            : undefined
+        }
+        confirmLabel="삭제"
+        destructive
+        onConfirm={() => {
+          if (attendanceDeleteTarget) handleDeleteAttendance(attendanceDeleteTarget);
+          setAttendanceDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }

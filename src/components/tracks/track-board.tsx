@@ -55,6 +55,7 @@ import type { Track, TrackFormData, WorkLog, TrackStatus, WorkLogFormData } from
 import { LogForm } from "@/components/logs/log-form";
 import { MemoPreview } from "@/components/memo/memo-preview";
 import { TrackFiles } from "@/components/tracks/track-files";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface TrackBoardProps {
   tracks: Track[];
@@ -138,6 +139,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
   const [kakaoEntries, setKakaoEntries] = useState<WorkLogFormData[] | null>(null);
   const [kakaoOriginalText, setKakaoOriginalText] = useState("");
   const [kakaoIsGrouped, setKakaoIsGrouped] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Track | null>(null);
 
   // 업무 삭제
   const [deletedLogIds, setDeletedLogIds] = useState<Set<string>>(new Set());
@@ -192,7 +194,6 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
   }
 
   async function handleDelete(track: Track) {
-    if (!confirm(`"${track.title}" 트랙을 삭제할까요?`)) return;
     try {
       await fetch(`/api/tracks/${track.id}`, { method: "DELETE" });
       setTracks((prev) => prev.filter((t) => t.id !== track.id));
@@ -937,7 +938,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
                       </button>
                       <button
                         className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-                        onClick={(e) => { e.stopPropagation(); handleDelete(track); }}
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(track); }}
                       >
                         <Trash2 className="h-3 w-3 text-red-500" />
                       </button>
@@ -951,6 +952,16 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
       )}
 
       {showForm && <TrackFormModal form={form} setForm={setForm} saving={saving} onSave={handleSave} onClose={() => { setShowForm(false); setEditingTrack(null); setForm(emptyForm()); }} isEdit={!!editingTrack} />}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}
+        title="트랙을 삭제할까요?"
+        description={deleteTarget ? `"${deleteTarget.title}" 트랙이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.` : undefined}
+        confirmLabel="삭제"
+        destructive
+        onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget); setDeleteTarget(null); }}
+      />
     </div>
   );
 }
