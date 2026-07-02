@@ -23,6 +23,7 @@ import {
   Wallet,
   Layers,
   Smartphone,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +34,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-const NAV_GROUPS = [
+export const NAV_GROUPS = [
   {
     items: [
       { href: "/", label: "대시보드", icon: LayoutDashboard },
@@ -90,6 +91,18 @@ export function NavContent({ onNavigate }: { onNavigate?: () => void }) {
         <span className="text-base font-semibold tracking-tight text-foreground/90">
           업무일지
         </span>
+      </div>
+
+      <div className="px-3 pb-2">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("command-palette:open"))}
+          className="flex w-full items-center gap-2 rounded-lg border bg-background px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent/50"
+        >
+          <Search className="h-3.5 w-3.5" />
+          <span className="flex-1 text-left">검색</span>
+          <kbd className="rounded border bg-muted px-1.5 py-0.5 text-[10px] font-medium">⌘K</kbd>
+        </button>
       </div>
 
       <nav className="flex-1 space-y-4 px-3 py-1">
@@ -196,6 +209,16 @@ export function MobileHeader() {
       </Sheet>
 
       <span className="flex-1 truncate px-2 text-center text-[15px] font-semibold">{title}</span>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9"
+        aria-label="검색"
+        onClick={() => window.dispatchEvent(new Event("command-palette:open"))}
+      >
+        <Search className="h-5 w-5" />
+      </Button>
 
       <Button
         variant="ghost"

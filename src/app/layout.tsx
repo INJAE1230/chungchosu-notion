@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DesktopSidebar, MobileHeader } from "@/components/layout/sidebar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { CommandPalette } from "@/components/layout/command-palette";
 import "./globals.css";
 
 const notoSansKR = Noto_Sans_KR({
@@ -52,6 +53,7 @@ export default async function RootLayout({
                 </main>
                 <MobileBottomNav />
               </div>
+              <CommandPalette />
             </div>
           ) : (
             children
