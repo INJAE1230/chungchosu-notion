@@ -26,8 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MoreHorizontal, Pencil, Trash2, X, Layers } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, X, Layers, ClipboardList } from "lucide-react";
 import { STATUS_COLORS, PROJECT_COLORS, TAG_COLORS, PRIORITY_COLORS, STATUSES } from "@/lib/constants";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DeleteDialog } from "./delete-dialog";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -54,9 +55,13 @@ export function LogTable({ logs: initialLogs, tracks = [] }: { logs: WorkLog[]; 
 
   if (logs.length === 0) {
     return (
-      <div className="py-16 text-center text-muted-foreground">
-        조회된 업무가 없습니다
-      </div>
+      <EmptyState
+        icon={ClipboardList}
+        title="조회된 업무가 없어요"
+        description="필터를 바꾸거나 새 업무를 추가해보세요"
+        action={{ label: "업무 추가", href: "/logs/new" }}
+        className="py-16"
+      />
     );
   }
 

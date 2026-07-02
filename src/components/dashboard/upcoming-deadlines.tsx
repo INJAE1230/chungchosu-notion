@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PROJECT_COLORS } from "@/lib/constants";
+import { CalendarCheck } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { WorkLog } from "@/lib/types";
 
 function getDaysUntil(dateStr: string): number {
@@ -46,9 +48,11 @@ export function UpcomingDeadlines({ logs }: { logs: WorkLog[] }) {
       </CardHeader>
       <CardContent>
         {upcoming.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">
-            임박한 마감이 없습니다
-          </p>
+          <EmptyState
+            icon={CalendarCheck}
+            title="임박한 마감이 없어요"
+            description="3일 내 마감 예정 업무가 여기 표시됩니다"
+          />
         ) : (
           <div className="space-y-1">
             {upcoming.map((log) => (

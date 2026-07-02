@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ClipboardList } from "lucide-react";
 import { STATUS_COLORS, PROJECT_COLORS } from "@/lib/constants";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { WorkLog } from "@/lib/types";
 
 export function RecentLogs({ logs }: { logs: WorkLog[] }) {
@@ -24,15 +25,12 @@ export function RecentLogs({ logs }: { logs: WorkLog[] }) {
       </CardHeader>
       <CardContent>
         {logs.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
-            <p className="text-sm">등록된 업무가 없습니다</p>
-            <Link
-              href="/logs/new"
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              첫 업무를 추가해보세요
-            </Link>
-          </div>
+          <EmptyState
+            icon={ClipboardList}
+            title="아직 등록된 업무가 없어요"
+            description="첫 업무를 추가하고 기록을 시작해보세요"
+            action={{ label: "첫 업무 추가", href: "/logs/new" }}
+          />
         ) : (
           <div className="space-y-1">
             {logs.map((log) => (

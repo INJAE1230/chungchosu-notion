@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PROJECT_COLORS } from "@/lib/constants";
-import { CheckCircle2, Circle, Clock, ArrowRight, Hourglass, Bookmark } from "lucide-react";
+import { CheckCircle2, Circle, Clock, ArrowRight, Hourglass, Bookmark, ListTodo } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { WorkLog, Status } from "@/lib/types";
 
 const STATUS_ICONS: Record<Status, typeof Circle> = {
@@ -29,9 +30,12 @@ export function TodayTasks({ logs }: { logs: WorkLog[] }) {
       </CardHeader>
       <CardContent>
         {logs.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">
-            오늘 등록된 업무가 없습니다
-          </p>
+          <EmptyState
+            icon={ListTodo}
+            title="오늘 등록된 업무가 없어요"
+            description="위 빠른 메모로 오늘 할 일을 적어보세요"
+            action={{ label: "업무 추가", href: "/logs/new" }}
+          />
         ) : (
           <div className="space-y-1">
             {logs.map((log) => {
