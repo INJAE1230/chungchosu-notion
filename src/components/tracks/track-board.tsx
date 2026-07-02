@@ -50,7 +50,7 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import { ENTITIES, TRACK_STATUSES, TRACK_STATUS_COLORS, PROJECT_COLORS, STATUS_COLORS } from "@/lib/constants";
+import { ENTITIES, TRACK_STATUSES, TRACK_STATUS_COLORS, PROJECT_COLORS, STATUS_COLORS, MEMO_CHUNK_SIZE } from "@/lib/constants";
 import type { Track, TrackFormData, WorkLog, TrackStatus, WorkLogFormData } from "@/lib/types";
 import { LogForm } from "@/components/logs/log-form";
 import { MemoPreview } from "@/components/memo/memo-preview";
@@ -264,7 +264,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
 
   async function handleKakaoParse() {
     if (!kakaoText.trim()) { toast.error("텍스트를 붙여넣어주세요"); return; }
-    const useGrouped = kakaoText.trim().length >= 6000;
+    const useGrouped = kakaoText.trim().length >= MEMO_CHUNK_SIZE;
     setKakaoLoading(true);
     try {
       const res = await fetch("/api/memo", {
@@ -767,7 +767,7 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
                       </label>
                       <span className="text-xs text-muted-foreground">카카오톡 대화 내보내기(.txt) 지원</span>
                     </div>
-                    {kakaoText.length >= 6000 && (
+                    {kakaoText.length >= MEMO_CHUNK_SIZE && (
                       <p className="text-xs text-violet-600 dark:text-violet-400">
                         텍스트가 길어 그룹 파싱 모드로 전환됩니다 — 주제·법인별로 5~7개 상위 업무로 클러스터링합니다
                       </p>

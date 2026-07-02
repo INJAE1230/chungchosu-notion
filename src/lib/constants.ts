@@ -89,6 +89,11 @@ export const FREQUENCIES: Frequency[] = ["매일", "매주", "격주", "매월",
 
 export const PRESET_CATEGORIES: PresetCategory[] = ["정기 보고", "정산/회계", "회의", "관리 업무"];
 
+// 메모/카톡 파싱 기준 길이(글자 수).
+// - 이 값 이상이면 클라이언트에서 그룹 파싱 모드로 전환
+// - 서버에서 비그룹 파싱 시 이 크기 단위로 청크 분할
+export const MEMO_CHUNK_SIZE = 6000;
+
 export const DAY_OF_WEEK_LABELS: Record<number, string> = {
   0: "일요일",
   1: "월요일",
