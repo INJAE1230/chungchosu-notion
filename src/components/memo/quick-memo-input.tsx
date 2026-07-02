@@ -200,9 +200,16 @@ export function QuickMemoInput() {
         {error && (
           <p className="mt-2 text-sm text-red-500">{error}</p>
         )}
-        <p className="mt-2 text-xs text-muted-foreground">
-          Ctrl+Enter로 전송 · 파일 첨부 가능
-        </p>
+        {loading ? (
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-primary">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            AI가 메모를 분석하고 있어요… 잠시만 기다려 주세요
+          </p>
+        ) : (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Ctrl+Enter로 전송 · 파일 첨부 가능
+          </p>
+        )}
       </CardContent>
     </Card>
   );

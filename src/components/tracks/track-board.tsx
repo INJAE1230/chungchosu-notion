@@ -780,6 +780,13 @@ export function TrackBoard({ tracks: initialTracks, allLogs, initialTrackId }: T
                       {kakaoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                       {kakaoLoading ? "AI 분석 중..." : "AI로 업무 파악하기"}
                     </Button>
+                    {kakaoLoading && (
+                      <p className="text-center text-xs text-muted-foreground">
+                        {kakaoText.trim().length >= MEMO_CHUNK_SIZE
+                          ? "대화량이 많아 그룹 분석 중이에요 — 20~30초 정도 걸릴 수 있어요"
+                          : "AI가 대화를 분석하고 있어요…"}
+                      </p>
+                    )}
                   </>
                 ) : (
                   <MemoPreview
