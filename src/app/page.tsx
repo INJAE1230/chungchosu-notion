@@ -65,36 +65,37 @@ export default async function DashboardPage() {
       {/* 빠른메모 */}
       <QuickMemoInput />
 
-      {/* 반복 업무 */}
-      {templateDatabaseId && <TemplateQuickActions />}
-
       {/* 마감 알림 */}
       <DeadlineAlert logs={ownLogs} />
 
-      {/* 트랙 현황 */}
-      <TrackStatusWidget tracks={tracks} allLogs={allLogs} today={todayStr} />
-
-      {/* 오늘의 업무 + 마감 임박 */}
+      {/* 오늘의 업무 + 마감 임박 (오늘 처리할 것 우선) */}
       <div className="grid gap-6 lg:grid-cols-2">
         <TodayTasks logs={todayLogs} />
         <UpcomingDeadlines logs={ownLogs} />
       </div>
 
-      {/* 차트 */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ProjectChart stats={stats} />
-        <StatusChart stats={stats} />
-      </div>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <PriorityChart stats={stats} />
-        <WeeklyChart stats={stats} />
-      </div>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <CompletionRateChart stats={stats} />
-      </div>
+      {/* 반복 업무 */}
+      {templateDatabaseId && <TemplateQuickActions />}
+
+      {/* 트랙 현황 */}
+      <TrackStatusWidget tracks={tracks} allLogs={allLogs} today={todayStr} />
 
       {/* 최근 업무 */}
       <RecentLogs logs={recentLogs} />
+
+      {/* 분석 (심층 지표는 하단에 모아서) */}
+      <section className="space-y-6 pt-2">
+        <h2 className="text-sm font-semibold text-muted-foreground">분석</h2>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ProjectChart stats={stats} />
+          <StatusChart stats={stats} />
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <PriorityChart stats={stats} />
+          <WeeklyChart stats={stats} />
+        </div>
+        <CompletionRateChart stats={stats} />
+      </section>
     </div>
   );
 }
