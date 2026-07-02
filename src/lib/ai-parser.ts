@@ -1,6 +1,6 @@
 import { generateObject, generateText } from "ai";
 import { z } from "zod";
-import { model } from "./ai";
+import { model, modelPro } from "./ai";
 import type { Track, WorkLog } from "./types";
 
 export async function generateTrackSummary(
@@ -577,7 +577,10 @@ ${text}`,
 
 export async function parseMemoTextGrouped(text: string, today: string) {
   const { object } = await generateObject({
-    model,
+    // 긴 대화(3만자+)를 한 번에 클러스터링+상세추출해야 하므로 고성능 모델 사용
+    model: modelPro,
+    // 5~7개 그룹에 상세 항목을 모두 담으면 출력이 길어져 기본 한도로는 잘릴 수 있음
+    maxOutputTokens: 16000,
     schema: workLogSchema,
     prompt: `당신은 대용량 업무 대화를 분석하는 클러스터링 전문가입니다.
 주어진 대화에서 업무를 추출하되, 주제·법인·이슈별로 그룹화하여 5~7개의 상위 업무(Parent Task)로 압축하세요.
